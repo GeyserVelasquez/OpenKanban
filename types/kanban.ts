@@ -13,3 +13,12 @@ export interface ColumnType {
   title: string;
   cards: CardType[];
 }
+
+export interface BoardType {
+  id: string;
+  name: string;
+  backgroundColor: string;
+  columns: ColumnType[];
+}
+
+export type ThemeType = 'light' | 'dark' | 'playful';

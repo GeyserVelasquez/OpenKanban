@@ -1,4 +1,5 @@
 @tailwind base;
+
 @tailwind components;
 @tailwind utilities;
 
@@ -36,4 +37,70 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Playful Theme - Pastel Colors */
+.playful {
+  --playful-pink: #ffc0cb;
+  --playful-lavender: #e6e6fa;
+  --playful-mint: #b5ead7;
+  --playful-peach: #ffdab9;
+  --playful-sky: #b0e0e6;
+  --playful-lilac: #dda0dd;
+  --playful-bg: #fff5f7;
+  --playful-text: #6b4c7a;
+}
+
+.playful body {
+  background: linear-gradient(135deg, #ffc0cb 0%, #e6e6fa 50%, #b5ead7 100%);
+}
+
+.playful .bg-white {
+  background-color: #fffbfc !important;
+  border: 1px solid #ffc0cb30 !important;
+}
+
+.playful .bg-gray-50 {
+  background-color: var(--playful-bg) !important;
+}
+
+.playful .bg-gray-800 {
+  background-color: #f8e8f0 !important;
+}
+
+.playful .text-slate-800 {
+  color: var(--playful-text) !important;
+}
+
+.playful .text-white {
+  color: #6b4c7a !important;
+}
+
+.playful .bg-cyan-500 {
+  background: linear-gradient(135deg, var(--playful-pink), var(--playful-lavender)) !important;
+}
+
+.playful .border-slate-100,
+.playful .border-gray-700 {
+  border-color: rgba(255, 192, 203, 0.3) !important;
+}
+
+.playful .bg-slate-50 {
+  background-color: #fff0f5 !important;
+}
+
+.playful .hover\:bg-slate-50:hover {
+  background-color: #ffe4f0 !important;
+}
+
+.playful .bg-cyan-50 {
+  background-color: #fff0f8 !important;
+}
+
+.playful .text-cyan-700 {
+  color: #d946a6 !important;
+}
+
+.playful .border-cyan-500 {
+  border-color: #ec4899 !important;
 }

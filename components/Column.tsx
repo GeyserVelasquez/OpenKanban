@@ -8,6 +8,7 @@ interface ColumnProps {
   column: ColumnType;
   onAddCard: (columnId: string, title: string) => void;
   onEditCard: (cardId: string, title: string, description: string, priority: "low" | "medium" | "high") => void;
+  onDeleteCard: (cardId: string) => void;
   onEditColumn: () => void;
   onDeleteColumn: () => void;
 }
@@ -79,7 +80,7 @@ const IconEdit = ({ className }: { className?: string }) => (
 );
 
 
-export default function Column({ column, onAddCard, onEditCard, onEditColumn, onDeleteColumn }: ColumnProps) {
+export default function Column({ column, onAddCard, onEditCard, onDeleteCard, onEditColumn, onDeleteColumn }: ColumnProps) {
   const [isAddingCard, setIsAddingCard] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
 
@@ -97,25 +98,25 @@ export default function Column({ column, onAddCard, onEditCard, onEditColumn, on
   };
 
   return (
-    <div className="w-80 flex-shrink-0 flex flex-col max-h-full bg-slate-50 rounded-2xl p-4">
+    <div className="w-80 flex-shrink-0 flex flex-col max-h-full bg-slate-50 dark:bg-gray-700 rounded-2xl p-4 transition-colors duration-200">
       <div className="flex items-center justify-between px-2 mb-4">
         <div className="flex items-center gap-2 flex-1">
-          <h3 className="font-bold text-slate-800 text-lg">{column.title}</h3>
+          <h3 className="font-bold text-slate-800 dark:text-white text-lg">{column.title}</h3>
           <button
             onClick={onEditColumn}
-            className="opacity-0 group-hover:opacity-100 hover:bg-slate-200 p-1 rounded-lg transition-all"
+            className="hover:bg-slate-200 dark:hover:bg-gray-600 p-1 rounded-lg transition-all"
             title="Editar nombre de la lista"
           >
-            <IconEdit className="w-3 h-3 text-slate-500" />
+            <IconEdit className="w-3 h-3 text-slate-500 dark:text-slate-300" />
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span className="bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1 rounded-full">
+          <span className="bg-slate-200 dark:bg-gray-600 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-1 rounded-full">
             {column.cards.length}
           </span>
           <button
             onClick={onDeleteColumn}
-            className="opacity-0 group-hover:opacity-100 hover:bg-red-100 p-1.5 rounded-lg transition-all"
+            className="hover:bg-red-100 dark:hover:bg-red-900/30 p-1.5 rounded-lg transition-all"
             title="Eliminar columna"
           >
             <IconTrash className="w-4 h-4 text-red-500" />
@@ -125,19 +126,19 @@ export default function Column({ column, onAddCard, onEditCard, onEditColumn, on
 
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 mb-3">
         {column.cards.map((card) => (
-          <Card key={card.id} card={card} onEditCard={onEditCard} />
+          <Card key={card.id} card={card} onEditCard={onEditCard} onDeleteCard={onDeleteCard} />
         ))}
       </div>
 
       {isAddingCard ? (
-        <div className="bg-white p-3 rounded-2xl border-2 border-cyan-300 shadow-sm">
+        <div className="bg-white dark:bg-gray-600 p-3 rounded-2xl border-2 border-cyan-300 dark:border-cyan-500 shadow-sm">
           <input
             autoFocus
             type="text"
             value={newCardTitle}
             onChange={(e) => setNewCardTitle(e.target.value)}
             placeholder="Título de la tarjeta..."
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 mb-3"
+            className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400 dark:bg-gray-700 dark:text-white mb-3"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -158,7 +159,7 @@ export default function Column({ column, onAddCard, onEditCard, onEditColumn, on
             </button>
             <button
               onClick={handleCancel}
-              className="p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+              className="p-2 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
             >
               <IconX className="w-5 h-5" />
             </button>
@@ -167,7 +168,7 @@ export default function Column({ column, onAddCard, onEditCard, onEditColumn, on
       ) : (
         <button
           onClick={() => setIsAddingCard(true)}
-          className="flex items-center justify-center gap-2 w-full py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors font-medium text-sm group"
+          className="flex items-center justify-center gap-2 w-full py-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-600 rounded-xl transition-colors font-medium text-sm group"
         >
           <IconPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
           <span>Agregar Tarjeta</span>
