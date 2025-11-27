@@ -23,12 +23,14 @@ import {
 } from "@dnd-kit/sortable";
 import { createPortal } from "react-dom";
 
+import { useWorkspace } from "@/context/WorkspaceContext";
 import Sidebar from "@/components/Sidebar";
 import BoardHeader from "@/components/BoardHeader";
 import Column from "@/components/Column";
 import Card from "@/components/Card";
 import DetailDrawer from "@/components/DetailDrawer";
 import GlobalHistoryModal from "@/components/GlobalHistoryModal";
+import DashboardModal from "@/components/DashboardModal";
 import { BoardType, ColumnType, CardType, HistoryLogType } from "@/types/kanban";
 
 const CURRENT_USER = "Usuario AAAZZZ";
@@ -38,76 +40,6 @@ const createHistoryLog = (message: string): HistoryLogType => ({
   userId: CURRENT_USER,
   message, 
 });
-
-const initialBoard: BoardType = {
-  id: "board-1",
-  name: "OpenKanban Master Project",
-  backgroundColor: "bg-gray-100 dark:bg-gray-800",
-  activityLog: [createHistoryLog("Tablero creado")],
-  columns: [
-    {
-      id: "col-1",
-      title: "Pendiente",
-      color: "bg-slate-200 dark:bg-gray-700",
-      cards: [
-        {
-          id: "card-1",
-          title: "Diseñar nueva landing page",
-          description: "Crear mockups y prototipos para la nueva página de inicio",
-          columnId: "col-1",
-          priority: "high",
-          history: [createHistoryLog("Tarjeta creada")],
-          tags: [],
-          comments: [],
-        },
-        {
-          id: "card-2",
-          title: "Investigar competidores",
-          description: "Análisis de mercado y benchmarking",
-          columnId: "col-1",
-          priority: "medium",
-          history: [createHistoryLog("Tarjeta creada")],
-          tags: [],
-          comments: [],
-        },
-      ],
-    },
-    {
-      id: "col-2",
-      title: "En Proceso",
-      color: "bg-blue-200 dark:bg-blue-900/40",
-      cards: [
-        {
-          id: "card-4",
-          title: "Implementar autenticación",
-          description: "Configurar OAuth y JWT para el sistema de login",
-          columnId: "col-2",
-          priority: "high",
-          history: [createHistoryLog("Tarjeta creada")],
-          tags: [],
-          comments: [],
-        },
-      ],
-    },
-    {
-      id: "col-3",
-      title: "Hecho",
-      color: "bg-green-200 dark:bg-green-900/40",
-      cards: [
-        {
-          id: "card-6",
-          title: "Setup del proyecto Next.js",
-          description: "Configuración inicial con TypeScript y Tailwind",
-          columnId: "col-3",
-          priority: "high",
-          history: [createHistoryLog("Tarjeta creada")],
-          tags: [],
-          comments: [],
-        },
-      ],
-    },
-  ],
-};
 
 const IconPlus = ({ className }: { className?: string }) => (
   <svg
@@ -151,11 +83,47 @@ const dropAnimation: DropAnimation = {
   }),
 };
 
+// Empty state component
+const EmptyState = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="text-center max-w-md px-6">
+      <div className="mb-6">
+        <svg
+          className="w-24 h-24 mx-auto text-slate-300 dark:text-slate-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+          />
+        </svg>
+      </div>
+      <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200 mb-3">
+        No hay tablero activo
+      </h2>
+      <p className="text-slate-500 dark:text-slate-400 mb-6">
+        Crea un grupo y un tablero desde el sidebar para comenzar a organizar tus tareas.
+      </p>
+      <div className="flex flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <p>💡 <strong>Tip:</strong> Haz clic en el botón "+" en el sidebar</p>
+        <p>📋 Los tableros nuevos vienen con columnas predeterminadas</p>
+      </div>
+    </div>
+  </div>
+);
+
 export default function Home() {
-  const [board, setBoard] = useState<BoardType>(initialBoard);
+  const { getActiveBoard, updateBoard, workspace } = useWorkspace();
+  const [board, setBoard] = useState<BoardType | null>(null);
   const [mounted, setMounted] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   
   const [activeColumn, setActiveColumn] = useState<ColumnType | null>(null);
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
@@ -189,40 +157,30 @@ export default function Home() {
     })
   );
 
-  const columnIds = useMemo(() => board.columns.map((col) => col.id), [board.columns]);
-
+  // Load active board from workspace
   useEffect(() => {
     setMounted(true);
-    const savedBoard = localStorage.getItem("OPENKANBAN_BOARD");
-    if (savedBoard) {
-      const parsedBoard = JSON.parse(savedBoard);
-      const migratedBoard = {
-        ...parsedBoard,
-        activityLog: parsedBoard.activityLog || [createHistoryLog("Tablero recuperado")],
-        columns: parsedBoard.columns.map((col: ColumnType) => ({
-          ...col,
-          cards: col.cards.map((card: CardType) => ({
-            ...card,
-            history: card.history || [createHistoryLog("Tarjeta creada")],
-            tags: card.tags || [],
-            comments: card.comments || [],
-          })),
-        })),
-      };
-      setBoard(migratedBoard);
+    const activeBoard = getActiveBoard();
+    if (activeBoard) {
+      setBoard(activeBoard);
     }
-  }, []);
+  }, [workspace.activeBoardId]);
 
+  // Sync board changes to workspace
   useEffect(() => {
-    if (!mounted) return;
-    localStorage.setItem("OPENKANBAN_BOARD", JSON.stringify(board));
+    if (!mounted || !board) return;
+    updateBoard(board.id, board);
   }, [board, mounted]);
 
+  const columnIds = useMemo(() => board?.columns.map((col) => col.id) || [], [board?.columns]);
+
   const handleColorChange = (newColor: string) => {
-    setBoard((prev) => ({ ...prev, backgroundColor: newColor }));
+    if (!board) return;
+    setBoard((prev) => prev ? { ...prev, backgroundColor: newColor } : null);
   };
 
   const handleAddNewCard = (columnId: string, title: string) => {
+    if (!board) return;
     const newCard: CardType = {
       id: `card-${Date.now()}`,
       title,
@@ -234,7 +192,7 @@ export default function Home() {
       comments: [],
     };
 
-    setBoard((prev) => ({
+    setBoard((prev) => prev ? ({
       ...prev,
       activityLog: [createHistoryLog(`Tarjeta "${title}" creada en lista`), ...prev.activityLog],
       columns: prev.columns.map((col) =>
@@ -242,10 +200,11 @@ export default function Home() {
           ? { ...col, cards: [...col.cards, newCard] }
           : col
       ),
-    }));
+    }) : null);
   };
 
   const handleCreateTask = () => {
+    if (!board) return;
     setIsCreatingTask(true);
     if (board.columns.length > 0) {
       setNewTaskColumn(board.columns[0].id);
@@ -253,6 +212,7 @@ export default function Home() {
   };
 
   const handleSaveTask = () => {
+    if (!board) return;
     if (newTaskTitle.trim() && newTaskColumn) {
       const newCard: CardType = {
         id: `card-${Date.now()}`,
@@ -267,7 +227,7 @@ export default function Home() {
 
       const columnTitle = board.columns.find(c => c.id === newTaskColumn)?.title || "lista";
 
-      setBoard((prev) => ({
+      setBoard((prev) => prev ? ({
         ...prev,
         activityLog: [createHistoryLog(`Tarea "${newTaskTitle}" creada en ${columnTitle}`), ...prev.activityLog],
         columns: prev.columns.map((col) =>
@@ -275,7 +235,7 @@ export default function Home() {
             ? { ...col, cards: [...col.cards, newCard] }
             : col
         ),
-      }));
+      }) : null);
 
       setNewTaskTitle("");
       setNewTaskPriority("medium");
@@ -290,6 +250,7 @@ export default function Home() {
   };
 
   const handleEditCard = (cardId: string, title: string, description: string, priority: "low" | "medium" | "high") => {
+    if (!board) return;
     const card = board.columns.flatMap(col => col.cards).find(c => c.id === cardId);
     if (card) {
       setEditingCard(card);
@@ -300,41 +261,41 @@ export default function Home() {
   };
 
   const handleSaveCardEdit = () => {
-    if (editingCard && editCardTitle.trim()) {
-      const changes: string[] = [];
-      
-      if (editCardTitle.trim() !== editingCard.title) changes.push("título");
-      if (editCardDescription.trim() !== editingCard.description) changes.push("descripción");
-      if (editCardPriority !== editingCard.priority) changes.push("prioridad");
+    if (!board || !editingCard || !editCardTitle.trim()) return;
+    
+    const changes: string[] = [];
+    
+    if (editCardTitle.trim() !== editingCard.title) changes.push("título");
+    if (editCardDescription.trim() !== editingCard.description) changes.push("descripción");
+    if (editCardPriority !== editingCard.priority) changes.push("prioridad");
 
-      const updatedCard: CardType = {
-        ...editingCard,
-        title: editCardTitle.trim(),
-        description: editCardDescription.trim(),
-        priority: editCardPriority,
-        history: changes.length > 0
-          ? [...editingCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)]
-          : editingCard.history,
-      };
+    const updatedCard: CardType = {
+      ...editingCard,
+      title: editCardTitle.trim(),
+      description: editCardDescription.trim(),
+      priority: editCardPriority,
+      history: changes.length > 0
+        ? [...editingCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)]
+        : editingCard.history,
+    };
 
-      setBoard((prev) => ({
-        ...prev,
-        activityLog: changes.length > 0 
-          ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${editingCard.title}"`), ...prev.activityLog]
-          : prev.activityLog,
-        columns: prev.columns.map((col) => ({
-          ...col,
-          cards: col.cards.map((card) =>
-            card.id === editingCard.id ? updatedCard : card
-          ),
-        })),
-      }));
+    setBoard((prev) => prev ? ({
+      ...prev,
+      activityLog: changes.length > 0 
+        ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${editingCard.title}"`), ...prev.activityLog]
+        : prev.activityLog,
+      columns: prev.columns.map((col) => ({
+        ...col,
+        cards: col.cards.map((card) =>
+          card.id === editingCard.id ? updatedCard : card
+        ),
+      })),
+    }) : null);
 
-      setEditingCard(null);
-      setEditCardTitle("");
-      setEditCardDescription("");
-      setEditCardPriority("medium");
-    }
+    setEditingCard(null);
+    setEditCardTitle("");
+    setEditCardDescription("");
+    setEditCardPriority("medium");
   };
 
   const handleCancelCardEdit = () => {
@@ -345,15 +306,16 @@ export default function Home() {
   };
 
   const handleDeleteCard = (cardId: string) => {
+    if (!board) return;
     const card = board.columns.flatMap(col => col.cards).find(c => c.id === cardId);
-    setBoard((prev) => ({
+    setBoard((prev) => prev ? ({
       ...prev,
       activityLog: card ? [createHistoryLog(`Eliminó tarjeta "${card.title}"`), ...prev.activityLog] : prev.activityLog,
       columns: prev.columns.map((col) => ({
         ...col,
         cards: col.cards.filter((card) => card.id !== cardId),
       })),
-    }));
+    }) : null);
   };
 
   const handleCardClick = (cardId: string) => {
@@ -361,6 +323,7 @@ export default function Home() {
   };
 
   const handleUpdateCard = (updatedCard: CardType) => {
+    if (!board) return;
     const originalCard = board.columns
       .flatMap(col => col.cards)
       .find(c => c.id === updatedCard.id);
@@ -380,7 +343,7 @@ export default function Home() {
         }
       : updatedCard;
 
-    setBoard((prev) => ({
+    setBoard((prev) => prev ? ({
       ...prev,
       activityLog: changes.length > 0 
         ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${updatedCard.title}"`), ...prev.activityLog]
@@ -391,10 +354,11 @@ export default function Home() {
           card.id === updatedCard.id ? cardWithHistory : card
         ),
       })),
-    }));
+    }) : null);
   };
 
   const handleAddNewColumn = (title: string, insertIndex?: number) => {
+    if (!board) return;
     const newColumn: ColumnType = {
       id: `col-${Date.now()}`,
       title,
@@ -404,6 +368,7 @@ export default function Home() {
 
     if (insertIndex !== undefined) {
       setBoard((prev) => {
+        if (!prev) return null;
         const newColumns = [...prev.columns];
         newColumns.splice(insertIndex, 0, newColumn);
         return { 
@@ -413,21 +378,22 @@ export default function Home() {
         };
       });
     } else {
-      setBoard((prev) => ({
+      setBoard((prev) => prev ? ({
         ...prev,
         activityLog: [createHistoryLog(`Añadió lista "${title}"`), ...prev.activityLog],
         columns: [...prev.columns, newColumn],
-      }));
+      }) : null);
     }
   };
 
   const handleDeleteColumn = (columnId: string) => {
+    if (!board) return;
     const col = board.columns.find(c => c.id === columnId);
-    setBoard((prev) => ({
+    setBoard((prev) => prev ? ({
       ...prev,
       activityLog: col ? [createHistoryLog(`Eliminó lista "${col.title}"`), ...prev.activityLog] : prev.activityLog,
       columns: prev.columns.filter((col) => col.id !== columnId),
-    }));
+    }) : null);
   };
 
   const handleEditColumn = (columnId: string, currentTitle: string) => {
@@ -436,8 +402,9 @@ export default function Home() {
   };
 
   const handleSaveColumnTitle = (columnId: string) => {
+    if (!board) return;
     if (editingColumnTitle.trim()) {
-      setBoard((prev) => ({
+      setBoard((prev) => prev ? ({
         ...prev,
         activityLog: [createHistoryLog(`Renombró lista a "${editingColumnTitle}"`), ...prev.activityLog],
         columns: prev.columns.map((col) =>
@@ -445,7 +412,7 @@ export default function Home() {
             ? { ...col, title: editingColumnTitle.trim() }
             : col
         ),
-      }));
+      }) : null);
     }
     setEditingColumnId(null);
     setEditingColumnTitle("");
@@ -470,12 +437,13 @@ export default function Home() {
   };
 
   const handleChangeColumnColor = (columnId: string, color: string) => {
-    setBoard((prev) => ({
+    if (!board) return;
+    setBoard((prev) => prev ? ({
       ...prev,
       columns: prev.columns.map((col) =>
         col.id === columnId ? { ...col, color } : col
       ),
-    }));
+    }) : null);
   };
 
   // --- Drag and Drop Logic ---
@@ -494,6 +462,7 @@ export default function Home() {
   };
 
   const onDragOver = (event: DragOverEvent) => {
+    if (!board) return;
     const { active, over } = event;
     if (!over) return;
 
@@ -510,6 +479,7 @@ export default function Home() {
     // Moving a card over another card
     if (isActiveACard && isOverACard) {
       setBoard((board) => {
+        if (!board) return null;
         const activeColumnIndex = board.columns.findIndex((col) =>
           col.cards.some((card) => card.id === activeId)
         );
@@ -559,6 +529,7 @@ export default function Home() {
     const isOverAColumn = over.data.current?.type === "Column";
     if (isActiveACard && isOverAColumn) {
       setBoard((board) => {
+        if (!board) return null;
         const activeColumnIndex = board.columns.findIndex((col) =>
           col.cards.some((card) => card.id === activeId)
         );
@@ -586,6 +557,7 @@ export default function Home() {
   };
 
   const onDragEnd = (event: DragEndEvent) => {
+    if (!board) return;
     setActiveColumn(null);
     setActiveCard(null);
 
@@ -602,6 +574,7 @@ export default function Home() {
     if (isActiveAColumn) {
       if (activeId !== overId) {
         setBoard((board) => {
+          if (!board) return null;
           const activeColumnIndex = board.columns.findIndex((col) => col.id === activeId);
           const overColumnIndex = board.columns.findIndex((col) => col.id === overId);
 
@@ -640,6 +613,7 @@ export default function Home() {
         }
 
         setBoard((prev) => {
+          if (!prev) return null;
           const newColumns = [...prev.columns];
           let newActivityLog = prev.activityLog;
 
@@ -703,9 +677,121 @@ export default function Home() {
     setDragStartColumnId(null);
   };
 
-  const selectedCard = selectedCardId
+  const selectedCard = selectedCardId && board
     ? board.columns.flatMap(col => col.cards).find(c => c.id === selectedCardId)
     : null;
+
+  // Filtering logic - Enhanced to search by multiple criteria
+  const filteredBoard = useMemo(() => {
+    if (!board) return null;
+    if (!searchTerm.trim()) {
+      return board;
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    
+    return {
+      ...board,
+      columns: board.columns.map(column => ({
+        ...column,
+        cards: column.cards.filter(card => {
+          // Search in card title
+          const titleMatch = card.title.toLowerCase().includes(lowerSearchTerm);
+          
+          // Search in card description
+          const descriptionMatch = card.description?.toLowerCase().includes(lowerSearchTerm);
+          
+          // Search in tags
+          const tagMatch = card.tags?.some(tag => 
+            tag.name.toLowerCase().includes(lowerSearchTerm)
+          );
+          
+          // Search in column name
+          const columnMatch = column.title.toLowerCase().includes(lowerSearchTerm);
+          
+          // Search in priority (low, medium, high / baja, media, alta)
+          const priorityMap: Record<string, string[]> = {
+            'low': ['low', 'baja', 'bajo'],
+            'medium': ['medium', 'media', 'medio'],
+            'high': ['high', 'alta', 'alto', 'urgente', 'crítico', 'critico']
+          };
+          
+          const priorityMatch = priorityMap[card.priority]?.some(term => 
+            term.includes(lowerSearchTerm) || lowerSearchTerm.includes(term)
+          );
+          
+          return titleMatch || descriptionMatch || tagMatch || columnMatch || priorityMatch;
+        }),
+      })),
+    };
+  }, [board, searchTerm]);
+
+  // Statistics calculations
+  const statistics = useMemo(() => {
+    if (!board) {
+      return {
+        chartData: { labels: [], datasets: [] },
+        completed: 0,
+        total: 0,
+      };
+    }
+
+    const columnStats = board.columns.map(col => ({
+      label: col.title,
+      count: col.cards.length,
+    }));
+
+    const totalTasks = board.columns.reduce((sum, col) => sum + col.cards.length, 0);
+    const completedColumn = board.columns.find(col => 
+      col.title.toLowerCase().includes("hecho") || 
+      col.title.toLowerCase().includes("completado") ||
+      col.title.toLowerCase().includes("done")
+    );
+    const completedTasks = completedColumn ? completedColumn.cards.length : 0;
+
+    const chartData = {
+      labels: columnStats.map(s => s.label),
+      datasets: [
+        {
+          label: "Tareas por Estado",
+          data: columnStats.map(s => s.count),
+          backgroundColor: [
+            "rgba(59, 130, 246, 0.8)",
+            "rgba(251, 146, 60, 0.8)",
+            "rgba(34, 197, 94, 0.8)",
+            "rgba(168, 85, 247, 0.8)",
+            "rgba(236, 72, 153, 0.8)",
+          ],
+          borderColor: [
+            "rgba(59, 130, 246, 1)",
+            "rgba(251, 146, 60, 1)",
+            "rgba(34, 197, 94, 1)",
+            "rgba(168, 85, 247, 1)",
+            "rgba(236, 72, 153, 1)",
+          ],
+          borderWidth: 2,
+        },
+      ],
+    };
+
+    return {
+      chartData,
+      completed: completedTasks,
+      total: totalTasks,
+    };
+  }, [board]);
+
+  // Show empty state if no board is active
+  if (!board) {
+    return (
+      <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-200">
+        <Sidebar />
+        <div className="flex-1 flex flex-col h-full min-w-0">
+          <EmptyState />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DndContext
@@ -725,12 +811,14 @@ export default function Home() {
             onColorChange={handleColorChange}
             onCreateTask={handleCreateTask}
             onOpenHistory={() => setIsHistoryOpen(true)}
+            onSearchChange={setSearchTerm}
+            onOpenDashboard={() => setIsDashboardOpen(true)}
           />
 
           <main className={`flex-1 overflow-x-auto overflow-y-hidden ${board.backgroundColor} p-6 transition-colors duration-200`}>
             <div className="h-full inline-flex items-start gap-4 group">
               <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-                {board.columns.map((column, index) => (
+                {(filteredBoard || board).columns.map((column, index) => (
                   <React.Fragment key={column.id}>
                     {editingColumnId === column.id ? (
                       <div className="w-80 flex-shrink-0 bg-slate-50 dark:bg-gray-700 rounded-2xl p-4">
@@ -823,7 +911,7 @@ export default function Home() {
           </main>
         </div>
 
-        {createPortal(
+        {mounted && createPortal(
           <DragOverlay dropAnimation={dropAnimation}>
             {activeColumn && (
               <Column
@@ -1025,6 +1113,14 @@ export default function Home() {
           isOpen={isHistoryOpen}
           onClose={() => setIsHistoryOpen(false)}
           history={board.activityLog || []}
+        />
+
+        <DashboardModal
+          isOpen={isDashboardOpen}
+          onClose={() => setIsDashboardOpen(false)}
+          chartData={statistics.chartData}
+          completed={statistics.completed}
+          total={statistics.total}
         />
       </div>
     </DndContext>

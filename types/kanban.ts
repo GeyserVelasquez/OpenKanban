@@ -41,4 +41,20 @@ export interface BoardType {
   backgroundColor: string;
   columns: ColumnType[];
   activityLog: HistoryLogType[];
+  groupId?: string; // Optional for backward compatibility
+  createdAt?: number;
+}
+
+export interface GroupType {
+  id: string;
+  title: string;
+  type: "group";
+  boards: BoardType[];
+  createdAt: number;
+}
+
+export interface WorkspaceData {
+  groups: GroupType[];
+  activeGroupId: string | null;
+  activeBoardId: string | null;
 }

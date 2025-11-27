@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
+import FilterBar from "./FilterBar";
 
 interface BoardHeaderProps {
   boardName: string;
@@ -9,6 +10,8 @@ interface BoardHeaderProps {
   onColorChange: (newColor: string) => void;
   onCreateTask: () => void;
   onOpenHistory: () => void;
+  onSearchChange: (term: string) => void;
+  onOpenDashboard: () => void;
 }
 
 const IconPlus = ({ className }: { className?: string }) => (
@@ -24,21 +27,6 @@ const IconPlus = ({ className }: { className?: string }) => (
   >
     <path d="M5 12h14" />
     <path d="M12 5v14" />
-  </svg>
-);
-
-const IconFilter = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
   </svg>
 );
 
@@ -84,6 +72,22 @@ const IconSun = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const IconChart = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M3 3v18h18" />
+    <path d="m19 9-5 5-4-4-3 3" />
+  </svg>
+);
+
 const boardColors = [
   { name: "Azul", class: "bg-blue-100 dark:bg-blue-900/40" },
   { name: "Verde", class: "bg-green-100 dark:bg-green-900/40" },
@@ -92,7 +96,15 @@ const boardColors = [
   { name: "Gris", class: "bg-gray-100 dark:bg-gray-800" },
 ];
 
-export default function BoardHeader({ boardName, boardColor, onColorChange, onCreateTask, onOpenHistory }: BoardHeaderProps) {
+export default function BoardHeader({ 
+  boardName, 
+  boardColor, 
+  onColorChange, 
+  onCreateTask, 
+  onOpenHistory,
+  onSearchChange,
+  onOpenDashboard,
+}: BoardHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
@@ -118,6 +130,10 @@ export default function BoardHeader({ boardName, boardColor, onColorChange, onCr
         </div>
       </div>
 
+      <div className="flex items-center gap-4 flex-1 max-w-md mx-8">
+        <FilterBar onSearchChange={onSearchChange} />
+      </div>
+
       <div className="flex items-center gap-6">
         <div className="flex -space-x-3">
           {[1, 2, 3, 4].map((i) => (
@@ -140,8 +156,12 @@ export default function BoardHeader({ boardName, boardColor, onColorChange, onCr
         <div className="h-8 w-px bg-slate-200 dark:bg-gray-700"></div>
 
         <div className="flex items-center gap-3">
-          <button className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-gray-600">
-            <IconFilter className="w-5 h-5" />
+          <button
+            onClick={onOpenDashboard}
+            className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-gray-600"
+            title="Ver estadísticas"
+          >
+            <IconChart className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 border-l border-slate-200 dark:border-gray-700 pl-6 ml-2">
