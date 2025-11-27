@@ -36,7 +36,7 @@ const CURRENT_USER = "Usuario AAAZZZ";
 const createHistoryLog = (message: string): HistoryLogType => ({
   timestamp: Date.now(),
   userId: CURRENT_USER,
-  message,
+  message, 
 });
 
 const initialBoard: BoardType = {
@@ -57,6 +57,8 @@ const initialBoard: BoardType = {
           columnId: "col-1",
           priority: "high",
           history: [createHistoryLog("Tarjeta creada")],
+          tags: [],
+          comments: [],
         },
         {
           id: "card-2",
@@ -65,6 +67,8 @@ const initialBoard: BoardType = {
           columnId: "col-1",
           priority: "medium",
           history: [createHistoryLog("Tarjeta creada")],
+          tags: [],
+          comments: [],
         },
       ],
     },
@@ -80,6 +84,8 @@ const initialBoard: BoardType = {
           columnId: "col-2",
           priority: "high",
           history: [createHistoryLog("Tarjeta creada")],
+          tags: [],
+          comments: [],
         },
       ],
     },
@@ -95,6 +101,8 @@ const initialBoard: BoardType = {
           columnId: "col-3",
           priority: "high",
           history: [createHistoryLog("Tarjeta creada")],
+          tags: [],
+          comments: [],
         },
       ],
     },
@@ -196,6 +204,8 @@ export default function Home() {
           cards: col.cards.map((card: CardType) => ({
             ...card,
             history: card.history || [createHistoryLog("Tarjeta creada")],
+            tags: card.tags || [],
+            comments: card.comments || [],
           })),
         })),
       };
@@ -220,6 +230,8 @@ export default function Home() {
       columnId,
       priority: "medium",
       history: [createHistoryLog("Tarjeta creada")],
+      tags: [],
+      comments: [],
     };
 
     setBoard((prev) => ({
@@ -249,6 +261,8 @@ export default function Home() {
         columnId: newTaskColumn,
         priority: newTaskPriority,
         history: [createHistoryLog("Tarjeta creada")],
+        tags: [],
+        comments: [],
       };
 
       const columnTitle = board.columns.find(c => c.id === newTaskColumn)?.title || "lista";
@@ -700,7 +714,6 @@ export default function Home() {
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
-      dragDropManager={undefined} // Fix for some dnd-kit versions
     >
       <div className="flex h-screen w-full bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-200">
         <Sidebar />

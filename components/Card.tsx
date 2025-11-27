@@ -57,6 +57,21 @@ const IconTrash = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const IconMessage = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
 export default function Card({ card, onEditCard, onDeleteCard, onCardClick }: CardProps) {
   const {
     attributes,
@@ -147,6 +162,24 @@ export default function Card({ card, onEditCard, onDeleteCard, onCardClick }: Ca
         </p>
       )}
 
+      {card.tags && card.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {card.tags.slice(0, 3).map((tag) => (
+            <span
+              key={tag.id}
+              className={`${tag.color} text-white text-xs px-2 py-0.5 rounded font-medium`}
+            >
+              {tag.name}
+            </span>
+          ))}
+          {card.tags.length > 3 && (
+            <span className="text-xs text-slate-400 dark:text-slate-500 px-2 py-0.5">
+              +{card.tags.length - 3}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-gray-600">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden border-2 border-white dark:border-gray-700">
@@ -156,6 +189,12 @@ export default function Card({ card, onEditCard, onDeleteCard, onCardClick }: Ca
               className="w-full h-full"
             />
           </div>
+          {card.comments && card.comments.length > 0 && (
+            <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+              <IconMessage className="w-3.5 h-3.5" />
+              <span className="text-xs">{card.comments.length}</span>
+            </div>
+          )}
         </div>
         {card.history && card.history.length > 0 && (
           <span className="text-xs text-slate-400 dark:text-slate-500">
