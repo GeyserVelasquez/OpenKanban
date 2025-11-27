@@ -70,4 +70,3 @@ Thumbs.db
 
 # Testing coverage
 /frontend/coverage/
-node_modules

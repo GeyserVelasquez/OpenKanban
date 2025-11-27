@@ -2,7 +2,7 @@
 
 > **Gestión ágil de proyectos personales mediante tableros visuales.**
 
-OpenKanban es una herramienta de productividad moderna y de código abierto diseñada para simplificar la gestión de tareas. Inspirada en soluciones como Trello y Wekan, esta aplicación ofrece una experiencia fluida para organizar flujos de trabajo mediante la metodología Kanban.
+OpenKanban es una herramienta de productividad moderna y de código abierto diseñada para simplificar la gestión de tareas. [cite_start]Inspirada en soluciones como Trello y Wekan[cite: 3, 4], esta aplicación ofrece una experiencia fluida para organizar flujos de trabajo mediante la metodología Kanban.
 
 El proyecto está estructurado como un **Monorepo**, combinando la robustez de PHP con la interactividad del frontend moderno.
 
