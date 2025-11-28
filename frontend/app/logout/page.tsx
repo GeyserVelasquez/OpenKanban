@@ -73,11 +73,8 @@ export default function LoginPage() {
 
     api.get('http://localhost:8000/sanctum/csrf-cookie')
 
-    api.post('http://localhost:8000/login', {
-      email,
-      password,
-    }).then(response => {
-      console.log('Login successful:', response.data); // 204 No Content
+    api.post('http://localhost:8000/logout').then(response => {
+      console.log('Logout successful:', response.data);
       // Handle successful login (e.g., redirect, store token, etc.)
     }).catch(error => {
       console.error('Login error:', error.response?.data || error.message);
