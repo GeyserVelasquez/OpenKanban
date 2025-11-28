@@ -2,9 +2,24 @@
 
 > **Gestión ágil de proyectos personales mediante tableros visuales.**
 
-OpenKanban es una herramienta de productividad moderna y de código abierto diseñada para simplificar la gestión de tareas. [cite_start]Inspirada en soluciones como Trello y Wekan[cite: 3, 4], esta aplicación ofrece una experiencia fluida para organizar flujos de trabajo mediante la metodología Kanban.
+OpenKanban es una herramienta de productividad moderna y de código abierto diseñada para simplificar la **gestión de tareas**. Inspirada en soluciones como Trello y Wekan, esta aplicación ofrece una experiencia fluida para organizar flujos de trabajo mediante la **metodología Kanban**. El proyecto está estructurado como un **Monorepo**, combinando la robustez de PHP con la interactividad del frontend moderno.
 
-El proyecto está estructurado como un **Monorepo**, combinando la robustez de PHP con la interactividad del frontend moderno.
+## 🛡️ Licencia
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## 👥 Integrantes del Equipo
+
+Este proyecto fue desarrollado por:
+
+* **Manuel Casique**
+* **Geyser Velasquez**
+* **Guillermo García**
+* **Leonal Cazorla**
+
+---
 
 ## 🛠️ Tech Stack
 
@@ -12,14 +27,15 @@ El proyecto está estructurado como un **Monorepo**, combinando la robustez de P
 - **Backend:** Laravel 12 (API Only), MySQL.
 - **Arquitectura:** Monorepo (Frontend + Backend desacoplados).
 
-## ✨ Características Principales
-
-- [cite_start]**Gestión de Tableros:** Creación dinámica de espacios de trabajo, carpetas y tableros con personalización de colores[cite: 9].
-- [cite_start]**Flujo Kanban:** Sistema flexible de Columnas y Tarjetas para visualizar el progreso del trabajo[cite: 10].
-- [cite_start]**Auditoría Detallada:** Historial de cambios inmutable (Logs) para rastrear quién movió qué y cuándo[cite: 14].
-- **Organización Jerárquica:** Estructura robusta de Grupos > Carpetas > Tableros.
-- [cite_start]**Drag & Drop:** (Roadmap) Interactividad fluida para mover tarjetas entre estados[cite: 17].
+---
 
 ## 🚀 Instalación y Despliegue
 
-Sigue las instrucciones en la carpeta `/docs` para levantar el entorno de desarrollo usando Docker o instalación manual.
+Para poner en marcha OpenKanban en tu entorno local, tienes dos opciones:
+
+### Opción 1: Usando Docker (Recomendado)
+
+Si tienes **Docker** y **Docker Compose** instalados, usa el siguiente comando para levantar la aplicación y la base de datos:
+
+```bash
+docker-compose up -d
