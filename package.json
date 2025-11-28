@@ -1,0 +1,17 @@
+{
+  "name": "openkanban",
+  "version": "1.0.0",
+  "description": "Scripts for manage monorepo OpenKanban from root directory",
+  "scripts": {
+    "backend": "cd backend && php artisan serve",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "run-p backend frontend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && composer install && cp .env.example .env && php artisan key:generate",
+    "install:all": "run-p install:frontend install:backend",
+    "postinstall": "npm run install:all"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}
