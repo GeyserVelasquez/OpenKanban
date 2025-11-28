@@ -31,11 +31,14 @@ Este proyecto fue desarrollado por:
 
 ## 🚀 Instalación y Despliegue
 
-Para poner en marcha OpenKanban en tu entorno local, tienes dos opciones:
+Para poner en marcha OpenKanban en tu entorno local, sigue estos pasos para la instalación manual:
 
-### Opción 1: Usando Docker (Recomendado)
+### 1. Dependencias del Monorepo (Frontend y Backend)
 
-Si tienes **Docker** y **Docker Compose** instalados, usa el siguiente comando para levantar la aplicación y la base de datos:
+El proyecto es un Monorepo. El siguiente comando debe ejecutarse **en la raíz del proyecto**. Este paso es crucial porque:
+
+* **Frontend (Next.js):** Instala todas las dependencias de Node.js necesarias (React, Next.js, etc.).
+* **Backend (Laravel):** Configura los *scripts* de compilación necesarios en el monorepo.
 
 ```bash
-docker-compose up -d
+npm install
