@@ -22,9 +22,18 @@ class User extends Authenticatable
         'password',
     ];
 
-    public function tasks()
+    // Tareas creadas por el usuario
+    public function createdTasks()
     {
         return $this->hasMany(Task::class, 'creator_id');
+    }
+
+    // Relación Many-to-Many con tareas asignadas
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class, 'task_user', 'user_id', 'task_id')
+            ->using(TaskUser::class)
+            ->withTimestamps();
     }
 
     public function comments()

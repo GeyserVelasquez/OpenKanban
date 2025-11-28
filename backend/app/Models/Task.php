@@ -49,4 +49,12 @@ class Task extends Model
     {
         return $this->hasMany(Log::class, 'task_id');
     }
+
+    // Relación Many-to-Many con usuarios asignados
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id')
+            ->using(TaskUser::class)
+            ->withTimestamps();
+    }
 }
