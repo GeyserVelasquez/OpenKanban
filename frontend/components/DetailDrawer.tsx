@@ -94,7 +94,7 @@ const IconMessage = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const CURRENT_USER = "Usuario AAAZZZ";
+const CURRENT_USER = "Manuel Casique";
 
 const TAG_COLORS = [
   "bg-red-500",

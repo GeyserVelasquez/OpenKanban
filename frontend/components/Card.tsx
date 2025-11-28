@@ -184,9 +184,9 @@ export default function Card({ card, onEditCard, onDeleteCard, onCardClick }: Ca
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden border-2 border-white dark:border-gray-700">
             <img
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${card.id}`}
-              alt="User"
-              className="w-full h-full"
+              src="/images/profile.jpg"
+              alt="Manuel Casique"
+              className="w-full h-full object-cover"
             />
           </div>
           {card.comments && card.comments.length > 0 && (

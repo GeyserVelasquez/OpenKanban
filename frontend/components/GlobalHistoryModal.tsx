@@ -20,8 +20,8 @@ export default function GlobalHistoryModal({ isOpen, onClose, history }: GlobalH
         <div className="p-6 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800 z-10">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-cyan-500">
-              <path d="M3 3v18h18" />
-              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             Actividad del Tablero
           </h2>

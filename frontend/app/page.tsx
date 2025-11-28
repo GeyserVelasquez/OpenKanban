@@ -33,7 +33,7 @@ import GlobalHistoryModal from "@/components/GlobalHistoryModal";
 import DashboardModal from "@/components/DashboardModal";
 import { BoardType, ColumnType, CardType, HistoryLogType } from "@/types/kanban";
 
-const CURRENT_USER = "Usuario AAAZZZ";
+const CURRENT_USER = "Manuel Casique";
 
 const createHistoryLog = (message: string): HistoryLogType => ({
   timestamp: Date.now(),
@@ -163,6 +163,8 @@ export default function Home() {
     const activeBoard = getActiveBoard();
     if (activeBoard) {
       setBoard(activeBoard);
+    } else {
+      setBoard(null);
     }
   }, [workspace.activeBoardId]);
 
