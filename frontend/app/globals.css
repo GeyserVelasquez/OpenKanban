@@ -1,0 +1,114 @@
+@tailwind base;
+
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fafafa;
+  --foreground: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Playful Theme - Pink Pastel Dream */
+.playful {
+  --playful-pink: #ffb7c5;      /* Cherry Blossom Pink */
+  --playful-rose: #ffcdd2;      /* Soft Rose */
+  --playful-lavender: #f3e5f5;  /* Pinkish Lavender */
+  --playful-cream: #fff0f5;     /* Lavender Blush */
+  --playful-accent: #f48fb1;    /* Pink Accent */
+  --playful-bg: #fff0f5;        /* Very light pink bg */
+  --playful-text: #880e4f;      /* Deep Pink/Plum for text */
+}
+
+.playful body {
+  background: linear-gradient(135deg, #ffe6ea 0%, #fff0f5 50%, #f3e5f5 100%);
+  background-attachment: fixed;
+}
+
+.playful .bg-white {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 183, 197, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(255, 183, 197, 0.15) !important;
+}
+
+.playful .bg-gray-50 {
+  background-color: rgba(255, 240, 245, 0.6) !important; /* Transparent pinkish */
+}
+
+.playful .bg-gray-800 {
+  background-color: #fff0f5 !important; /* Override dark mode bg in playful */
+}
+
+.playful .text-slate-800 {
+  color: var(--playful-text) !important;
+}
+
+.playful .text-slate-500,
+.playful .text-slate-600,
+.playful .text-slate-700 {
+  color: #ad1457 !important; /* Softer pink text */
+}
+
+.playful .text-white {
+  color: #6b4c7a !important;
+}
+
+.playful .bg-cyan-500 {
+  background: linear-gradient(135deg, var(--playful-pink), var(--playful-lavender)) !important;
+}
+
+.playful .border-slate-100,
+.playful .border-gray-700 {
+  border-color: rgba(255, 192, 203, 0.3) !important;
+}
+
+.playful .bg-slate-50 {
+  background-color: #fff0f5 !important;
+}
+
+.playful .hover\:bg-slate-50:hover {
+  background-color: #ffe4f0 !important;
+}
+
+.playful .bg-cyan-50 {
+  background-color: #fff0f8 !important;
+}
+
+.playful .text-cyan-700 {
+  color: #d946a6 !important;
+}
+
+.playful .border-cyan-500 {
+  border-color: #ec4899 !important;
+}
