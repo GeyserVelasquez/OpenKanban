@@ -17,8 +17,7 @@ Thumbs.db
 *.swo
 
 # Backup files
-*.backup
-*.backup2
+*.backup*
 
 # ------------------------------------------------------
 # NEXT.JS 14+
