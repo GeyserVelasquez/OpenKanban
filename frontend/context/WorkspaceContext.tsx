@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { BoardType, GroupType, WorkspaceData, ColumnType, HistoryLogType } from "@/types/kanban";
 
-const CURRENT_USER = "Usuario AAAZZZ";
+const CURRENT_USER = "Manuel Casique";
 
 const createHistoryLog = (message: string): HistoryLogType => ({
   timestamp: Date.now(),
@@ -144,14 +144,20 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
   const deleteGroup = (groupId: string) => {
     setWorkspace((prev) => {
+      const groupToDelete = prev.groups.find((g) => g.id === groupId);
       const newGroups = prev.groups.filter((g) => g.id !== groupId);
       const wasActive = prev.activeGroupId === groupId;
+      
+      // Check if the active board belongs to the group being deleted
+      const activeBoardInDeletedGroup = groupToDelete?.boards.some(
+        (b) => b.id === prev.activeBoardId
+      );
       
       return {
         ...prev,
         groups: newGroups,
         activeGroupId: wasActive && newGroups.length > 0 ? newGroups[0].id : null,
-        activeBoardId: wasActive ? null : prev.activeBoardId,
+        activeBoardId: activeBoardInDeletedGroup ? null : prev.activeBoardId,
       };
     });
   };

@@ -96,11 +96,11 @@ const boardColors = [
   { name: "Gris", class: "bg-gray-100 dark:bg-gray-800" },
 ];
 
-export default function BoardHeader({ 
-  boardName, 
-  boardColor, 
-  onColorChange, 
-  onCreateTask, 
+export default function BoardHeader({
+  boardName,
+  boardColor,
+  onColorChange,
+  onCreateTask,
   onOpenHistory,
   onSearchChange,
   onOpenDashboard,
@@ -135,23 +135,6 @@ export default function BoardHeader({
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="flex -space-x-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-800 bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden hover:z-10 hover:scale-110 transition-transform duration-200 cursor-pointer"
-            >
-               <img 
-                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i}&backgroundColor=c0aede`} 
-                 alt={`User ${i}`} 
-                 className="w-full h-full"
-               />
-            </div>
-          ))}
-          <div className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-800 bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 cursor-pointer transition-colors">
-            +5
-          </div>
-        </div>
 
         <div className="h-8 w-px bg-slate-200 dark:bg-gray-700"></div>
 
@@ -170,9 +153,18 @@ export default function BoardHeader({
               className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-700 dark:hover:text-slate-200 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-gray-600"
               title="Ver historial de actividad"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                <path d="M3 3v18h18" />
-                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
             </button>
 
@@ -187,7 +179,9 @@ export default function BoardHeader({
 
               {showColorPicker && (
                 <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-700 p-4 w-64 z-50">
-                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Color del Tablero</h3>
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">
+                    Color del Tablero
+                  </h3>
                   <div className="grid grid-cols-5 gap-2">
                     {boardColors.map((color) => (
                       <button
@@ -196,7 +190,9 @@ export default function BoardHeader({
                           onColorChange(color.class);
                           setShowColorPicker(false);
                         }}
-                        className={`w-10 h-10 rounded-xl ${color.class} border-2 ${
+                        className={`w-10 h-10 rounded-xl ${
+                          color.class
+                        } border-2 ${
                           boardColor === color.class
                             ? "border-cyan-500 ring-2 ring-cyan-200 dark:ring-cyan-800"
                             : "border-slate-200 dark:border-gray-600 hover:border-cyan-300 dark:hover:border-cyan-700"
@@ -221,7 +217,9 @@ export default function BoardHeader({
 
             {showThemePicker && (
               <div className="absolute top-full right-0 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-700 p-3 w-48 z-50">
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Tema</h3>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                  Tema
+                </h3>
                 <div className="space-y-1">
                   {[
                     { value: "light", label: "Claro" },
@@ -247,8 +245,8 @@ export default function BoardHeader({
               </div>
             )}
           </div>
-          
-          <button 
+
+          <button
             onClick={onCreateTask}
             className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-2.5 rounded-2xl font-semibold shadow-lg shadow-cyan-500/25 dark:shadow-cyan-900/50 transition-all active:scale-95"
           >

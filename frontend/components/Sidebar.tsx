@@ -109,10 +109,8 @@ const GroupItem = ({ groupId, title, boardCount, isExpanded, onToggle, onDelete,
               <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-700 rounded-xl shadow-lg border border-slate-200 dark:border-gray-600 py-1 z-20">
                 <button
                   onClick={() => {
-                    if (confirm(`¿Eliminar el grupo "${title}" y todos sus tableros?`)) {
-                      onDelete();
-                    }
                     setShowMenu(false);
+                    onDelete();
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                 >
@@ -176,10 +174,8 @@ const BoardItem = ({ boardId, title, isActive, onClick, onDelete }: BoardItemPro
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (confirm(`¿Eliminar el tablero "${title}"?`)) {
-                    onDelete();
-                  }
                   setShowMenu(false);
+                  onDelete();
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
               >
@@ -286,11 +282,10 @@ export default function Sidebar() {
         <div className="p-4 border-t border-slate-100 dark:border-gray-700">
           <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors text-slate-600 dark:text-slate-300">
             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
+              <img src="/images/profile.jpg" alt="Manuel Casique" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col items-start">
-              <span className="text-sm font-semibold text-slate-700 dark:text-white">Jane Doe</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500">Pro Plan</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-white">Manuel Casique</span>
             </div>
           </button>
         </div>
