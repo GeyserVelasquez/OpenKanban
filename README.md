@@ -21,10 +21,10 @@ Este proyecto está licenciado bajo la Licencia MIT, lo que permite usar, copiar
 
 Este proyecto fue desarrollado por:
 
-* **Manuel Casique**
-* **Geyser Velasquez**
-* **Guillermo García**
-* **Leonel Cazorla**
+* [![GitHub](https://img.shields.io/badge/GitHub-Manuel%20Casique-black?logo=github)](https://github.com/Manuel-Casique)
+* [![GitHub](https://img.shields.io/badge/GitHub-Geyser%20Velasquez-black?logo=github)](https://github.com/GeyserVelasquez)
+* [![GitHub](https://img.shields.io/badge/GitHub-Guillermo%20Garcia-black?logo=github)](https://github.com/GuilleGar1702)
+* [![GitHub](https://img.shields.io/badge/GitHub-Leonel%20Cazorla-black?logo=github)](https://github.com/Leonant26)
 
 ---
 
