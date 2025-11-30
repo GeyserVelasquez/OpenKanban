@@ -45,6 +45,34 @@ Antes de instalar, asegúrate de tener instalado:
 - Navegador moderno (Chrome, Edge, Firefox)
 
 ---
+## 📁 Estructura del proyecto
+
+```
+OpenKanban/
+├── backend/                # Backend Laravel
+│   ├── app/                # Código principal de Laravel (Controllers, Models, etc.)
+│   ├── bootstrap/          # Archivos de arranque del framework
+│   ├── config/             # Configuración del proyecto (database, app, etc.)
+│   ├── database/           # Migraciones y seeds
+│   ├── public/             # Carpeta pública, accesible desde el navegador
+│   ├── resources/          # Vistas, assets, traducciones
+│   ├── routes/             # Definición de rutas
+│   └── vendor/             # Dependencias instaladas vía Composer
+├── frontend/               # Frontend Next.js
+│   ├── components/         # Componentes reutilizables de React
+│   ├── pages/              # Páginas del proyecto
+│   ├── public/             # Archivos públicos (imágenes, favicon)
+│   ├── styles/             # Archivos CSS o Tailwind
+│   └── node_modules/       # Dependencias instaladas vía npm
+├── docs/                    # Documentación y manuales
+│   ├── Manuales_Usuario/    # Manual de administrador y usuario final
+│   ├── Diagramas/           # Diagramas de arquitectura y flujo
+│   └── Licenciamiento.md    # Licencias y atribuciones
+├── .gitignore              # Archivos y carpetas ignoradas por Git
+├── README.md               # Documentación del proyecto
+└── package.json / composer.json  # Dependencias y scripts de frontend/backend
+```
+---
 
 ## 🚀 Instalación y Despliegue
 
