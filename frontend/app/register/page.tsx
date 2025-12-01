@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+import Logo from "@/components/Logo";
+=======
 import api from "@/lib/axios";
+
 
 const IconEye = ({ className }: { className?: string }) => (
   <svg
@@ -203,14 +207,14 @@ export default function RegisterPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Brand */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-2xl shadow-purple-500/50 mb-4">
-            <span className="text-white font-bold text-2xl">OK</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Logo size={64} />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
             Crear cuenta
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Únete a OpenKanban y organiza tus proyectos
+            Únete a OpenKanban y gestiona tus proyectos
           </p>
         </div>
 
