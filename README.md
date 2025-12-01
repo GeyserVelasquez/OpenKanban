@@ -104,7 +104,7 @@ php artisan serve
 
 * Ingresa a la carpeta del frontend:
 ```cmd
-cd OpenKanban/frontend
+cd C:\laragon\www\OpenKanban\frontend
 ```
 
 * Instala las dependencias de Node.js:
