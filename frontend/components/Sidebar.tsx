@@ -212,8 +212,8 @@ export default function Sidebar() {
     createGroup(title);
   };
 
-  const handleCreateBoard = (groupId: string, title: string) => {
-    const boardId = createBoard(groupId, title);
+  const handleCreateBoard = async (groupId: string, title: string) => {
+    const boardId = await createBoard(groupId, title);
     setActiveBoard(boardId);
   };
 
