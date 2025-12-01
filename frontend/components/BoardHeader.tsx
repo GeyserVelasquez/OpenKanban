@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import FilterBar from "./FilterBar";
+import Logo from "./Logo";
 
 interface BoardHeaderProps {
   boardName: string;
@@ -112,9 +113,7 @@ export default function BoardHeader({
   return (
     <header className="h-20 px-8 flex items-center justify-between bg-white dark:bg-gray-800 border-b border-slate-100 dark:border-gray-700 flex-shrink-0 z-10 transition-colors duration-200">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-md shadow-cyan-200 dark:shadow-cyan-900/50">
-          <span className="text-white font-bold text-lg">M</span>
-        </div>
+        <Logo size={40} />
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
             {boardName}
