@@ -1,0 +1,23 @@
+meta {
+  name: logout
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{APP_URL}}/logout
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-XSRF-TOKEN: {{XSRF_TOKEN}}
+  Accept: application/json
+  Referer: http://localhost:3000
+  Cookie: {{COOKIE_XSRF}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

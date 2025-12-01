@@ -9,7 +9,8 @@ class FolderController extends Controller
 {
     public function index()
     {
-        return Folder::all();
+        $folders = Folder::all();
+        return response()->json($folders, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,20 @@ class FolderController extends Controller
         return response()->json($folder, 201);
     }
 
-    public function show($id)
+    public function show(Folder $folder)
     {
-        return Folder::findOrFail($id);
+        return response()->json($folder, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Folder $folder)
     {
-        $folder = Folder::findOrFail($id);
         $folder->update($request->all());
-        return $folder;
+        return response()->json($folder, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Folder $folder)
     {
-        Folder::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $folder->delete();
+        return response()->noContent();
     }
 }

@@ -1,0 +1,29 @@
+meta {
+  name: login
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{APP_URL}}/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "admin@w.com",
+    "password": "123456789.*"
+  }
+}
+
+script:post-response {
+  
+  
+  
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -9,7 +9,8 @@ class StateController extends Controller
 {
     public function index()
     {
-        return State::all();
+        $states = State::all();
+        return response()->json($states, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,20 @@ class StateController extends Controller
         return response()->json($state, 201);
     }
 
-    public function show($id)
+    public function show(State $state)
     {
-        return State::findOrFail($id);
+        return response()->json($state, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, State $state)
     {
-        $state = State::findOrFail($id);
         $state->update($request->all());
-        return $state;
+        return response()->json($state, 200);
     }
 
-    public function destroy($id)
+    public function destroy(State $state)
     {
-        State::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $state->delete();
+        return response()->noContent();
     }
 }

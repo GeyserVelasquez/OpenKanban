@@ -27,7 +27,7 @@ class Task extends Model
 
     public function column()
     {
-        return $this->belongsTo(BoardColumn::class, 'column_id');
+        return $this->belongsTo(Column::class, 'column_id');
     }
 
     public function state()

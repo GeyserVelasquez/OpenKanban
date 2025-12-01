@@ -9,7 +9,8 @@ class CommentController extends Controller
 {
     public function index()
     {
-        return Comment::with(['author', 'replies'])->get();
+        $comments = Comment::with(['author', 'replies'])->get();
+        return response()->json($comments, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,21 @@ class CommentController extends Controller
         return response()->json($comment, 201);
     }
 
-    public function show($id)
+    public function show(Comment $comment)
     {
-        return Comment::with(['replies', 'author'])->findOrFail($id);
+        $comment->load(['replies', 'author']);
+        return response()->json($comment, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Comment $comment)
     {
-        $comment = Comment::findOrFail($id);
         $comment->update($request->all());
-        return $comment;
+        return response()->json($comment, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Comment $comment)
     {
-        Comment::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $comment->delete();
+        return response()->noContent();
     }
 }

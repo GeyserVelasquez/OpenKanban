@@ -2,37 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BoardColumn;
+use App\Models\Column;
 use Illuminate\Http\Request;
 
 class ColumnController extends Controller
 {
     public function index()
     {
-        return BoardColumn::all();
+        $columns = Column::all();
+        return response()->json($columns, 200);
     }
 
     public function store(Request $request)
     {
-        $column = BoardColumn::create($request->all());
+        $column = Column::create($request->all());
         return response()->json($column, 201);
     }
 
-    public function show($id)
+    public function show(Column $column)
     {
-        return BoardColumn::findOrFail($id);
+        return response()->json($column, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Column $column)
     {
-        $column = BoardColumn::findOrFail($id);
         $column->update($request->all());
-        return $column;
+        return response()->json($column, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Column $column)
     {
-        BoardColumn::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $column->delete();
+        return response()->noContent();
     }
 }

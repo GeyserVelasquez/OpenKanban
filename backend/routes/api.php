@@ -28,3 +28,5 @@ Route::apiResource('tasks', TaskController::class);
 Route::apiResource('states', StateController::class);
 Route::apiResource('comments', CommentController::class);
 Route::apiResource('logs', LogController::class);
+
+Route::get('/user/tasks', [UserController::class, 'tasks']);

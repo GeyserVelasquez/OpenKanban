@@ -9,7 +9,8 @@ class GroupController extends Controller
 {
     public function index()
     {
-        return Group::all();
+        $groups = Group::with('folder')->get();
+        return response()->json($groups, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,23 @@ class GroupController extends Controller
         return response()->json($group, 201);
     }
 
-    public function show($id)
+    public function show(Group $group)
     {
-        return Group::findOrFail($id);
+        return response()->json($group, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Group $group)
     {
-        $group = Group::findOrFail($id);
         $group->update($request->all());
-        return $group;
+        return response()->json($group, 200);
     }
 
-    public function destroy($id)
+    // En tu archivo de rutas (api.php) asegúrate de usar {group}
+    // Route::delete('/groups/{group}', [GroupController::class, 'destroy']);
+
+    public function destroy(Group $group) // Inyectas el modelo
     {
-        Group::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $group->delete();
+        return response()->noContent(); 
     }
 }

@@ -24,6 +24,6 @@ class Board extends Model
 
     public function columns()
     {
-        return $this->hasMany(BoardColumn::class, 'board_id')->orderBy('position');
+        return $this->hasMany(Column::class, 'board_id')->orderBy('position');
     }
 }

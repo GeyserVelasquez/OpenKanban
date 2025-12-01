@@ -9,7 +9,8 @@ class TaskController extends Controller
 {
     public function index()
     {
-        return Task::with(['column', 'state', 'creator'])->get();
+        $tasks = Task::with(['column', 'state', 'creator'])->get();
+        return response()->json($tasks, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,21 @@ class TaskController extends Controller
         return response()->json($task, 201);
     }
 
-    public function show($id)
+    public function show(Task $task)
     {
-        return Task::with(['comments', 'logs'])->findOrFail($id);
+        $task->load(['comments', 'logs']);
+        return response()->json($task, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Task $task)
     {
-        $task = Task::findOrFail($id);
         $task->update($request->all());
-        return $task;
+        return response()->json($task, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Task $task)
     {
-        Task::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $task->delete();
+        return response()->noContent();
     }
 }

@@ -9,7 +9,8 @@ class BoardController extends Controller
 {
     public function index()
     {
-        return Board::all();
+        $boards = Board::all();
+        return response()->json($boards, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,20 @@ class BoardController extends Controller
         return response()->json($board, 201);
     }
 
-    public function show($id)
+    public function show(Board $board)
     {
-        return Board::findOrFail($id);
+        return response()->json($board, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Board $board)
     {
-        $board = Board::findOrFail($id);
         $board->update($request->all());
-        return $board;
+        return response()->json($board, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Board $board)
     {
-        Board::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $board->delete();
+        return response()->noContent();
     }
 }
