@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import Logo from "@/components/Logo";
+=======
+import api from "@/lib/axios";
+
 
 const IconEye = ({ className }: { className?: string }) => (
   <svg
@@ -74,13 +78,13 @@ export default function RegisterPage() {
 
   const getPasswordStrength = (pwd: string) => {
     if (!pwd) return { strength: 0, label: "", color: "" };
-    
+
     let strength = 0;
     if (pwd.length >= 8) strength++;
     if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) strength++;
     if (/\d/.test(pwd)) strength++;
     if (/[^a-zA-Z0-9]/.test(pwd)) strength++;
-    
+
     const labels = ["Muy débil", "Débil", "Media", "Fuerte", "Muy fuerte"];
     const colors = [
       "bg-red-500",
@@ -89,7 +93,7 @@ export default function RegisterPage() {
       "bg-lime-500",
       "bg-green-500",
     ];
-    
+
     return {
       strength,
       label: labels[strength],
@@ -101,52 +105,62 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
-    
+
     if (!name.trim()) {
       newErrors.name = "El nombre es requerido";
     } else if (name.trim().length < 2) {
       newErrors.name = "El nombre debe tener al menos 2 caracteres";
     }
-    
+
     if (!email.trim()) {
       newErrors.email = "El correo electrónico es requerido";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = "Correo electrónico inválido";
     }
-    
+
     if (!password) {
       newErrors.password = "La contraseña es requerida";
     } else if (password.length < 8) {
       newErrors.password = "La contraseña debe tener al menos 8 caracteres";
     }
-    
+
     if (!confirmPassword) {
       newErrors.confirmPassword = "Confirma tu contraseña";
     } else if (password !== confirmPassword) {
       newErrors.confirmPassword = "Las contraseñas no coinciden";
     }
-    
+
     if (!acceptTerms) {
       newErrors.terms = "Debes aceptar los términos y condiciones";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
-    setIsLoading(true);
-    
-    // Simulate registration process
-    setTimeout(() => {
+
+    try {
+      // 1. EL ÚNICO LUGAR DONDE LLAMAS ESTO
+      await api.get('/sanctum/csrf-cookie');
+
+      // 2. Haces el login
+      await api.post('/register', {
+        name,
+        email,
+        password,
+        password_confirmation: confirmPassword,
+      });
+    } catch (error) {
+      console.error("Error al registrar el usuario:", error);
+      return;
+    } finally {
       setIsLoading(false);
-      // Redirect to login
-      router.push("/login");
-    }, 2000);
+    }
+
+    router.push("/login");
   };
 
   return (
@@ -189,11 +203,10 @@ export default function RegisterPage() {
                   if (errors.name) setErrors({ ...errors, name: undefined });
                 }}
                 placeholder="Juan Pérez"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.name 
-                    ? "border-red-400 dark:border-red-500" 
-                    : "border-slate-200 dark:border-gray-600"
-                } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.name
+                  ? "border-red-400 dark:border-red-500"
+                  : "border-slate-200 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.name}</p>
@@ -214,11 +227,10 @@ export default function RegisterPage() {
                   if (errors.email) setErrors({ ...errors, email: undefined });
                 }}
                 placeholder="tu@email.com"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.email 
-                    ? "border-red-400 dark:border-red-500" 
-                    : "border-slate-200 dark:border-gray-600"
-                } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.email
+                  ? "border-red-400 dark:border-red-500"
+                  : "border-slate-200 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.email}</p>
@@ -240,11 +252,10 @@ export default function RegisterPage() {
                     if (errors.password) setErrors({ ...errors, password: undefined });
                   }}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
-                    errors.password 
-                      ? "border-red-400 dark:border-red-500" 
-                      : "border-slate-200 dark:border-gray-600"
-                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.password
+                    ? "border-red-400 dark:border-red-500"
+                    : "border-slate-200 dark:border-gray-600"
+                    } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
                 />
                 <button
                   type="button"
@@ -261,7 +272,7 @@ export default function RegisterPage() {
               {errors.password && (
                 <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.password}</p>
               )}
-              
+
               {/* Password Strength Indicator */}
               {password && (
                 <div className="mt-2">
@@ -295,13 +306,12 @@ export default function RegisterPage() {
                     if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
                   }}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
-                    errors.confirmPassword 
-                      ? "border-red-400 dark:border-red-500" 
-                      : confirmPassword && password === confirmPassword
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.confirmPassword
+                    ? "border-red-400 dark:border-red-500"
+                    : confirmPassword && password === confirmPassword
                       ? "border-green-400 dark:border-green-500"
                       : "border-slate-200 dark:border-gray-600"
-                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                    } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
                 />
                 <button
                   type="button"
@@ -335,11 +345,10 @@ export default function RegisterPage() {
                     setAcceptTerms(e.target.checked);
                     if (errors.terms) setErrors({ ...errors, terms: undefined });
                   }}
-                  className={`mt-0.5 w-4 h-4 rounded border-2 ${
-                    errors.terms 
-                      ? "border-red-400 dark:border-red-500" 
-                      : "border-slate-300 dark:border-gray-600"
-                  } text-purple-500 focus:ring-2 focus:ring-purple-400 transition-all`}
+                  className={`mt-0.5 w-4 h-4 rounded border-2 ${errors.terms
+                    ? "border-red-400 dark:border-red-500"
+                    : "border-slate-300 dark:border-gray-600"
+                    } text-purple-500 focus:ring-2 focus:ring-purple-400 transition-all`}
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">
                   Acepto los{" "}

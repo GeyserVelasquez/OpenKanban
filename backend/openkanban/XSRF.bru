@@ -1,0 +1,40 @@
+meta {
+  name: XSRF
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:8000/sanctum/csrf-cookie
+  body: none
+  auth: inherit
+}
+
+script:post-response {
+  // Obtener las cookies de la respuesta
+  const cookies = res.headers['set-cookie'];
+  
+  if (cookies) {
+    // Buscar la cookie que empieza por XSRF-TOKEN
+    const xsrfCookie = cookies.find(cookie => cookie.startsWith('XSRF-TOKEN'));
+    
+    if (xsrfCookie) {
+      // Extraer el valor crudo (lo que está antes del primer punto y coma)
+      let token = xsrfCookie.split(';')[0].split('=')[1];
+      
+      // IMPORTANTE: Laravel envía esto codificado en URL, hay que decodificarlo
+      // para que el backend lo acepte en el header.
+      token = decodeURIComponent(token);
+      
+      // Guardar en una variable de colección o entorno llamada 'xsrf_token'
+      bru.setVar('xsrf_token', token);
+      
+      console.log("Token XSRF extraído y guardado:", token);
+    }
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

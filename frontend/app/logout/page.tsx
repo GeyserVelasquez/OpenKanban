@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Logo from "@/components/Logo";
 // En frontend/components/Navbar.js
 import api from "../../lib/axios";
 
@@ -74,11 +73,8 @@ export default function LoginPage() {
 
     api.get('http://localhost:8000/sanctum/csrf-cookie')
 
-    api.post('http://localhost:8000/login', {
-      email,
-      password,
-    }).then(response => {
-      console.log('Login successful:', response.data); // 204 No Content
+    api.post('http://localhost:8000/logout').then(response => {
+      console.log('Logout successful:', response.data);
       // Handle successful login (e.g., redirect, store token, etc.)
     }).catch(error => {
       console.error('Login error:', error.response?.data || error.message);
@@ -109,8 +105,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Brand */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center mb-4">
-            <Logo size={64} />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-2xl shadow-cyan-500/50 mb-4">
+            <span className="text-white font-bold text-2xl">OK</span>
           </div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
             Bienvenido de nuevo
