@@ -3,7 +3,11 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+import Logo from "@/components/Logo";
+=======
 import api from "@/lib/axios";
+
 
 const IconEye = ({ className }: { className?: string }) => (
   <svg
@@ -135,28 +139,54 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // e.preventDefault();
+    // if (!validateForm()) return;
+
+    // try {
+    //   // 1. EL ÚNICO LUGAR DONDE LLAMAS ESTO
+    //   await api.get('/sanctum/csrf-cookie');
+
+    //   // 2. Haces el login
+    //   await api.post('/register', {
+    //     name,
+    //     email,
+    //     password,
+    //     password_confirmation: confirmPassword,
+    //   });
+    // } catch (error) {
+    //   console.error("Error al registrar el usuario:", error);
+    //   return;
+    // } finally {
+    //   setIsLoading(false);
+    // }
+
+    // router.push("/login");
+
     e.preventDefault();
-    if (!validateForm()) return;
 
-    try {
-      // 1. EL ÚNICO LUGAR DONDE LLAMAS ESTO
-      await api.get('/sanctum/csrf-cookie');
-
-      // 2. Haces el login
-      await api.post('/register', {
+    api.get("http://localhost:8000/sanctum/csrf-cookie");
+    setIsLoading(true);
+    api
+      .post("http://localhost:8000/register", {
         name,
         email,
         password,
         password_confirmation: confirmPassword,
+      })
+      .then((response) => {
+        router.push("/");
+        setIsLoading(false);
+        console.log("Register successful:", response.data); // 204 No Content
+        // Handle successful login (e.g., redirect, store token, etc.)
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        console.error("Resgister error:", error.response?.data || error.message);
+        return;
+        // Handle login error (e.g., show error message)
       });
-    } catch (error) {
-      console.error("Error al registrar el usuario:", error);
-      return;
-    } finally {
-      setIsLoading(false);
-    }
 
-    router.push("/login");
+    if (!validateForm()) return;
   };
 
   return (
@@ -164,21 +194,27 @@ export default function RegisterPage() {
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-72 h-72 bg-purple-300/20 dark:bg-purple-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-pink-300/20 dark:bg-pink-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-300/20 dark:bg-cyan-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute bottom-20 left-10 w-96 h-96 bg-pink-300/20 dark:bg-pink-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-300/20 dark:bg-cyan-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Brand */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-400 to-pink-500 shadow-2xl shadow-purple-500/50 mb-4">
-            <span className="text-white font-bold text-2xl">OK</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Logo size={64} />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
             Crear cuenta
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Únete a OpenKanban y organiza tus proyectos
+            Únete a OpenKanban y gestiona tus proyectos
           </p>
         </div>
 
@@ -187,7 +223,10 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Nombre Completo
               </label>
               <input
@@ -199,19 +238,25 @@ export default function RegisterPage() {
                   if (errors.name) setErrors({ ...errors, name: undefined });
                 }}
                 placeholder="Juan Pérez"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.name
-                  ? "border-red-400 dark:border-red-500"
-                  : "border-slate-200 dark:border-gray-600"
-                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${
+                  errors.name
+                    ? "border-red-400 dark:border-red-500"
+                    : "border-slate-200 dark:border-gray-600"
+                } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.name}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.name}
+                </p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Correo Electrónico
               </label>
               <input
@@ -223,19 +268,25 @@ export default function RegisterPage() {
                   if (errors.email) setErrors({ ...errors, email: undefined });
                 }}
                 placeholder="tu@email.com"
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.email
-                  ? "border-red-400 dark:border-red-500"
-                  : "border-slate-200 dark:border-gray-600"
-                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                className={`w-full px-4 py-3 rounded-xl border-2 ${
+                  errors.email
+                    ? "border-red-400 dark:border-red-500"
+                    : "border-slate-200 dark:border-gray-600"
+                } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.email}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.email}
+                </p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Contraseña
               </label>
               <div className="relative">
@@ -245,13 +296,15 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (errors.password) setErrors({ ...errors, password: undefined });
+                    if (errors.password)
+                      setErrors({ ...errors, password: undefined });
                   }}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.password
-                    ? "border-red-400 dark:border-red-500"
-                    : "border-slate-200 dark:border-gray-600"
-                    } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
+                    errors.password
+                      ? "border-red-400 dark:border-red-500"
+                      : "border-slate-200 dark:border-gray-600"
+                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
                 />
                 <button
                   type="button"
@@ -266,7 +319,9 @@ export default function RegisterPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.password}
+                </p>
               )}
 
               {/* Password Strength Indicator */}
@@ -276,7 +331,9 @@ export default function RegisterPage() {
                     <div className="flex-1 h-2 bg-slate-200 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full ${passwordStrength.color} transition-all duration-300`}
-                        style={{ width: `${(passwordStrength.strength / 4) * 100}%` }}
+                        style={{
+                          width: `${(passwordStrength.strength / 4) * 100}%`,
+                        }}
                       ></div>
                     </div>
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
@@ -289,7 +346,10 @@ export default function RegisterPage() {
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Confirmar Contraseña
               </label>
               <div className="relative">
@@ -299,15 +359,17 @@ export default function RegisterPage() {
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
-                    if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: undefined });
+                    if (errors.confirmPassword)
+                      setErrors({ ...errors, confirmPassword: undefined });
                   }}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.confirmPassword
-                    ? "border-red-400 dark:border-red-500"
-                    : confirmPassword && password === confirmPassword
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
+                    errors.confirmPassword
+                      ? "border-red-400 dark:border-red-500"
+                      : confirmPassword && password === confirmPassword
                       ? "border-green-400 dark:border-green-500"
                       : "border-slate-200 dark:border-gray-600"
-                    } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
+                  } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all`}
                 />
                 <button
                   type="button"
@@ -327,7 +389,9 @@ export default function RegisterPage() {
                 )}
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -339,26 +403,36 @@ export default function RegisterPage() {
                   checked={acceptTerms}
                   onChange={(e) => {
                     setAcceptTerms(e.target.checked);
-                    if (errors.terms) setErrors({ ...errors, terms: undefined });
+                    if (errors.terms)
+                      setErrors({ ...errors, terms: undefined });
                   }}
-                  className={`mt-0.5 w-4 h-4 rounded border-2 ${errors.terms
-                    ? "border-red-400 dark:border-red-500"
-                    : "border-slate-300 dark:border-gray-600"
-                    } text-purple-500 focus:ring-2 focus:ring-purple-400 transition-all`}
+                  className={`mt-0.5 w-4 h-4 rounded border-2 ${
+                    errors.terms
+                      ? "border-red-400 dark:border-red-500"
+                      : "border-slate-300 dark:border-gray-600"
+                  } text-purple-500 focus:ring-2 focus:ring-purple-400 transition-all`}
                 />
                 <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 transition-colors">
                   Acepto los{" "}
-                  <Link href="#" className="text-purple-600 dark:text-purple-400 hover:underline font-semibold">
+                  <Link
+                    href="#"
+                    className="text-purple-600 dark:text-purple-400 hover:underline font-semibold"
+                  >
                     Términos y Condiciones
                   </Link>{" "}
                   y la{" "}
-                  <Link href="#" className="text-purple-600 dark:text-purple-400 hover:underline font-semibold">
+                  <Link
+                    href="#"
+                    className="text-purple-600 dark:text-purple-400 hover:underline font-semibold"
+                  >
                     Política de Privacidad
                   </Link>
                 </span>
               </label>
               {errors.terms && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.terms}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.terms}
+                </p>
               )}
             </div>
 

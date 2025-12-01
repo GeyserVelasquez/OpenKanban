@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 // En frontend/components/Navbar.js
 import api from "../../lib/axios";
 
@@ -47,23 +48,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
     if (!email.trim()) {
       newErrors.email = "El correo electrónico es requerido";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = "Correo electrónico inválido";
     }
-    
+
     if (!password) {
       newErrors.password = "La contraseña es requerida";
     } else if (password.length < 6) {
       newErrors.password = "La contraseña debe tener al menos 6 caracteres";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -71,29 +74,28 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    api.get('http://localhost:8000/sanctum/csrf-cookie')
-
-    api.post('http://localhost:8000/login', {
-      email,
-      password,
-    }).then(response => {
-      console.log('Login successful:', response.data); // 204 No Content
-      // Handle successful login (e.g., redirect, store token, etc.)
-    }).catch(error => {
-      console.error('Login error:', error.response?.data || error.message);
-      // Handle login error (e.g., show error message)
-    });
-    
-    if (!validateForm()) return;
-    
+    api.get("http://localhost:8000/sanctum/csrf-cookie");
     setIsLoading(true);
-    
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false);
-      // Redirect to main app
-      router.push("/");
-    }, 1500);
+    api
+      .post("http://localhost:8000/login", {
+        email,
+        password,
+      })
+      .then((response) => {
+        router.push("/");
+        setIsLoading(false);
+        console.log("Login successful:", response.data); // 204 No Content
+        // Handle successful login (e.g., redirect, store token, etc.)
+      })
+      .catch((error) => {
+        setIsLoading(false);
+
+        console.error("Login error:", error.response?.data || error.message);
+        // Handle login error (e.g., show error message)
+      });
+
+    if (!validateForm()) return;
+
   };
 
   return (
@@ -101,15 +103,21 @@ export default function LoginPage() {
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-300/20 dark:bg-cyan-600/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/20 dark:bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-300/20 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-purple-300/20 dark:bg-purple-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-300/20 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo/Brand */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-2xl shadow-cyan-500/50 mb-4">
-            <span className="text-white font-bold text-2xl">OK</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Logo size={64} />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
             Bienvenido de nuevo
@@ -124,7 +132,10 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Correo Electrónico
               </label>
               <input
@@ -137,19 +148,24 @@ export default function LoginPage() {
                 }}
                 placeholder="tu@email.com"
                 className={`w-full px-4 py-3 rounded-xl border-2 ${
-                  errors.email 
-                    ? "border-red-400 dark:border-red-500" 
+                  errors.email
+                    ? "border-red-400 dark:border-red-500"
                     : "border-slate-200 dark:border-gray-600"
                 } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all`}
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.email}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.email}
+                </p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2"
+              >
                 Contraseña
               </label>
               <div className="relative">
@@ -159,12 +175,13 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (errors.password) setErrors({ ...errors, password: undefined });
+                    if (errors.password)
+                      setErrors({ ...errors, password: undefined });
                   }}
                   placeholder="••••••••"
                   className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${
-                    errors.password 
-                      ? "border-red-400 dark:border-red-500" 
+                    errors.password
+                      ? "border-red-400 dark:border-red-500"
                       : "border-slate-200 dark:border-gray-600"
                   } bg-white dark:bg-gray-700 text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all`}
                 />
@@ -181,7 +198,9 @@ export default function LoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500 dark:text-red-400">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {errors.password}
+                </p>
               )}
             </div>
 
@@ -247,11 +266,17 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
           Al continuar, aceptas nuestros{" "}
-          <Link href="#" className="text-cyan-600 dark:text-cyan-400 hover:underline">
+          <Link
+            href="#"
+            className="text-cyan-600 dark:text-cyan-400 hover:underline"
+          >
             Términos de Servicio
           </Link>{" "}
           y{" "}
-          <Link href="#" className="text-cyan-600 dark:text-cyan-400 hover:underline">
+          <Link
+            href="#"
+            className="text-cyan-600 dark:text-cyan-400 hover:underline"
+          >
             Política de Privacidad
           </Link>
         </p>

@@ -6,6 +6,7 @@ import Card from "./Card";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+
 interface ColumnProps {
   column: ColumnType;
   onAddCard: (columnId: string, title: string) => void;

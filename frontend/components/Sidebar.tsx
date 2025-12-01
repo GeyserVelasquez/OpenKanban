@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import CreateGroupModal from "./CreateGroupModal";
 import CreateBoardModal from "./CreateBoardModal";
+import Logo from "./Logo";
 
 // --- Icons ---
 const IconGroup = ({ className }: { className?: string }) => (
@@ -195,6 +196,8 @@ export default function Sidebar() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(workspace.groups.map(g => g.id)));
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [creatingBoardForGroup, setCreatingBoardForGroup] = useState<{ id: string; title: string } | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
@@ -212,16 +215,24 @@ export default function Sidebar() {
     createGroup(title);
   };
 
-  const handleCreateBoard = (groupId: string, title: string) => {
-    const boardId = createBoard(groupId, title);
+  const handleCreateBoard = async (groupId: string, title: string) => {
+    const boardId = await createBoard(groupId, title);
     setActiveBoard(boardId);
+  };
+
+  const handleLogout = () => {
+    // Redirect to login page
+    window.location.href = "/login";
   };
 
   return (
     <>
       <aside className="w-72 h-screen bg-white dark:bg-gray-800 border-r border-slate-100 dark:border-gray-700 flex flex-col overflow-hidden flex-shrink-0 transition-colors duration-200">
         <div className="p-6 border-b border-slate-100 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">OpenKanban</h2>
+          <div className="flex items-center gap-3 mb-2">
+            <Logo size={40} />
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">OpenKanban</h2>
+          </div>
           <p className="text-sm text-slate-500 dark:text-slate-400">Workspace Pro</p>
         </div>
 
@@ -280,14 +291,31 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-gray-700">
-          <button className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors text-slate-600 dark:text-slate-300">
-            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden">
-              <img src="/images/profile.jpg" alt="Manuel Casique" className="w-full h-full object-cover" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-semibold text-slate-700 dark:text-white">Manuel Casique</span>
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowProfileModal(true)}
+              className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors text-slate-600 dark:text-slate-300"
+            >
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden">
+                <img src="/images/profile.jpg" alt="Manuel Casique" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-semibold text-slate-700 dark:text-white">Manuel Casique</span>
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setShowLogoutModal(true)}
+              className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              title="Cerrar sesión"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" x2="9" y1="12" y2="12" />
+              </svg>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -307,6 +335,131 @@ export default function Sidebar() {
         }}
         groupTitle={creatingBoardForGroup?.title || ""}
       />
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowProfileModal(false)}>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-3xl p-8 w-full max-w-2xl shadow-2xl border border-slate-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
+              <h2 className="text-3xl font-bold text-slate-800 dark:text-white">Perfil de Usuario</h2>
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-full transition-colors text-slate-500 dark:text-slate-400"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Profile Picture and Basic Info */}
+            <div className="flex items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-gray-700">
+              <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden ring-4 ring-cyan-500/20">
+                <img src="/images/profile.jpg" alt="Manuel Casique" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">Manuel Casique</h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-2">Administrador del Workspace</p>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-semibold rounded-full">
+                    Pro Plan
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* User Details */}
+            <div className="space-y-6">
+              <div>
+                <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Información Personal</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Correo Electrónico</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">manuel.casique@email.com</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Rol</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">Administrador</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Fecha de Registro</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">15 de Noviembre, 2024</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Último Acceso</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">Hoy, 6:49 PM</p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Estadísticas</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl p-4 text-center border border-cyan-200 dark:border-cyan-800">
+                    <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{workspace.groups.length}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Grupos</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 text-center border border-purple-200 dark:border-purple-800">
+                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                      {workspace.groups.reduce((acc, g) => acc + g.boards.length, 0)}
+                    </p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Tableros</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 text-center border border-green-200 dark:border-green-800">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">Pro</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Plan</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-8 pt-6 border-t border-slate-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="w-full px-4 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowLogoutModal(false)}>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-200 dark:border-gray-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">¿Cerrar sesión?</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              ¿Estás seguro de que quieres cerrar sesión? Serás redirigido a la página de inicio de sesión.
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="flex-1 px-4 py-3 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-colors"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
