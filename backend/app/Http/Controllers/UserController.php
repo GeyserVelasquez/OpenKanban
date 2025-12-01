@@ -17,26 +17,18 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
      * Display the specified resource.
      */
-    public function show(user $user)
+    public function show(User $user)
     {
-        //
+        return response()->json($user);
     }
 
     public function tasks()
     {
-        $user = Auth::user()->tasks()->get();
-        return response()->json($user->tasks);
-    }   
+        $tasks = Auth::user()->tasks;
+        return response()->json($tasks);
+    }
 
     /**
      * Update the specified resource in storage.

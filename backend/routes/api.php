@@ -30,3 +30,5 @@ Route::apiResource('comments', CommentController::class);
 Route::apiResource('logs', LogController::class);
 
 Route::get('/user/tasks', [UserController::class, 'tasks']);
+Route::get('/user/{user}', [UserController::class, 'show']);
+Route::get('/user', [UserController::class, 'index']);
