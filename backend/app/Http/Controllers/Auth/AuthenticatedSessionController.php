@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
+
     /**
      * Handle an incoming authentication request.
      */
@@ -18,6 +19,9 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Actualizar última conexión
+        Auth::user()->update(['last_login_at' => now()]);
 
         return response()->noContent();
     }

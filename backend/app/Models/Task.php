@@ -57,4 +57,10 @@ class Task extends Model
             ->using(TaskUser::class)
             ->withTimestamps();
     }
+
+    // Alias más semántico para usuarios asignados
+    public function assignedUsers()
+    {
+        return $this->users();
+    }
 }

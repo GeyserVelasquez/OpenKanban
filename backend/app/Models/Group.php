@@ -21,4 +21,11 @@ class Group extends Model
     {
         return $this->hasMany(Folder::class, 'group_id');
     }
+
+    // Relación Many-to-Many con usuarios
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'group_user', 'group_id', 'user_id')
+            ->withTimestamps();
+    }
 }

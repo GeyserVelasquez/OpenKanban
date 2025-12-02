@@ -14,6 +14,7 @@ class Log extends Model
     protected $fillable = [
         'user_id',
         'task_id',
+        'board_id',
         'message',
     ];
 
@@ -25,5 +26,10 @@ class Log extends Model
     public function task()
     {
         return $this->belongsTo(Task::class, 'task_id');
+    }
+
+    public function board()
+    {
+        return $this->belongsTo(Board::class, 'board_id');
     }
 }

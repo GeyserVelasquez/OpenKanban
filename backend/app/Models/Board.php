@@ -26,4 +26,9 @@ class Board extends Model
     {
         return $this->hasMany(Column::class, 'board_id')->orderBy('position');
     }
+
+    public function logs()
+    {
+        return $this->hasMany(Log::class, 'board_id')->latest();
+    }
 }
