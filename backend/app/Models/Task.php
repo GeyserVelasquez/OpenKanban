@@ -64,4 +64,9 @@ class Task extends Model
     {
         return $this->users();
     }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'task_tag');
+    }
 }

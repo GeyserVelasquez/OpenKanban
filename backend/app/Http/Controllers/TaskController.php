@@ -88,9 +88,34 @@ class TaskController extends Controller
             'color' => 'nullable|string|max:255',
             'state_id' => 'sometimes|exists:states,id',
             'priority' => 'nullable|in:low,medium,high',
+            'tags' => 'nullable|array',
+            'tags.*.name' => 'required|string',
+            'tags.*.color' => 'required|string',
         ]);
 
         $task->update($request->only(['name', 'description', 'color', 'state_id', 'priority']));
+
+        if ($request->has('tags')) {
+            $boardId = $task->column->board_id;
+            $tagIds = [];
+
+            foreach ($request->tags as $tagData) {
+                $tag = \App\Models\Tag::firstOrCreate(
+                    [
+                        'name' => $tagData['name'],
+                        'board_id' => $boardId,
+                    ],
+                    [
+                        'color' => $tagData['color']
+                    ]
+                );
+                $tagIds[] = $tag->id;
+            }
+
+            $task->tags()->sync($tagIds);
+        }
+
+        $task->load('tags');
 
         return response()->json($task, 200);
     }

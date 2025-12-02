@@ -602,6 +602,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
         description: data.description,
         color: color,
         priority: data.priority,
+        tags: data.tags,
       });
     } catch (error) {
       console.error(`Error updating task ${taskId}:`, error);

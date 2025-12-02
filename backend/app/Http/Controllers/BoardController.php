@@ -37,7 +37,8 @@ class BoardController extends Controller
                 $query->orderBy('position');
             },
             'columns.tasks.assignedUsers:id,name,email',
-            'columns.tasks.state:id,name,color'
+            'columns.tasks.state:id,name,color',
+            'columns.tasks.tags'
         ]);
 
         return response()->json($board, 200);
