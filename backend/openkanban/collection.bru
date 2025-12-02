@@ -1,3 +1,26 @@
 auth {
   mode: none
 }
+
+script:pre-request {
+  await bru.sendRequest({
+    method: 'GET',
+    url: 'http://localhost:8000/sanctum/csrf-cookie',
+  }, function (err, res) {
+    if (err) {
+      console.error('Error:', err);
+      return;
+    }
+    console.log('Succes XSRF_TOKEN 204');
+    const jar = bru.cookies.jar();
+    const XSRF_TOKEN = await jar.getCookie("/", "XSRF-TOKEN");
+    const laravel_session = await jar.getCookie("/", "laravel-session");
+    
+    req.setHeaders({
+    "content-type": "application/json",
+    "X-XSRF-TOKEN": XSRF_TOKEN.value,
+    "laravel-session": laravel_session.value
+    });
+  
+  });
+}

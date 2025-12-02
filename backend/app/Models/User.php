@@ -16,6 +16,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -44,5 +45,12 @@ class User extends Authenticatable
     public function logs()
     {
         return $this->hasMany(Log::class, 'user_id');
+    }
+
+    // Relación Many-to-Many con grupos
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_user', 'user_id', 'group_id')
+            ->withTimestamps();
     }
 }

@@ -27,7 +27,7 @@ class Task extends Model
 
     public function column()
     {
-        return $this->belongsTo(BoardColumn::class, 'column_id');
+        return $this->belongsTo(Column::class, 'column_id');
     }
 
     public function state()
@@ -56,5 +56,11 @@ class Task extends Model
         return $this->belongsToMany(User::class, 'task_user', 'task_id', 'user_id')
             ->using(TaskUser::class)
             ->withTimestamps();
+    }
+
+    // Alias más semántico para usuarios asignados
+    public function assignedUsers()
+    {
+        return $this->users();
     }
 }

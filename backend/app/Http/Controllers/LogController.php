@@ -9,7 +9,8 @@ class LogController extends Controller
 {
     public function index()
     {
-        return Log::with(['user', 'task'])->get();
+        $logs = Log::with(['user', 'task'])->get();
+        return response()->json($logs, 200);
     }
 
     public function store(Request $request)
@@ -18,21 +19,21 @@ class LogController extends Controller
         return response()->json($log, 201);
     }
 
-    public function show($id)
+    public function show(Log $log)
     {
-        return Log::with(['user', 'task'])->findOrFail($id);
+        $log->load(['user', 'task']);
+        return response()->json($log, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Log $log)
     {
-        $log = Log::findOrFail($id);
         $log->update($request->all());
-        return $log;
+        return response()->json($log, 200);
     }
 
-    public function destroy($id)
+    public function destroy(Log $log)
     {
-        Log::destroy($id);
-        return response()->json(['message' => 'Deleted'], 200);
+        $log->delete();
+        return response()->noContent();
     }
 }

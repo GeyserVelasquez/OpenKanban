@@ -5,18 +5,21 @@ meta {
 }
 
 post {
-  url: http://localhost:8000/login
+  url: http://localhost:8000/register
   body: json
   auth: none
 }
 
 headers {
-  X-XSRF-TOKEN: {{xsrf_token}}
+  X-XSRF-TOKEN: {{XSRF_TOKEN}}
+  Accept: application/json
+  Referer: http://localhost:3000
+  Cookie: {{COOKIE_XSRF}}
 }
 
 body:json {
   {
-    "email": "admin@etañema.com",
+    "email": "admin@aaaaa.com",
     "password": "123456789.*",
     "password_confirmation": "123456789.*",
     "name": "admin"

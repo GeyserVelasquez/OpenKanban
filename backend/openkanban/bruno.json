@@ -6,8 +6,8 @@
     "node_modules",
     ".git"
   ],
-  "size": 0,
-  "filesCount": 0,
+  "size": 0.0015897750854492188,
+  "filesCount": 4,
   "presets": {
     "requestType": "http",
     "requestUrl": ""
