@@ -36,82 +36,82 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth:sanctum'])->group(function () {
+// Route::middleware(['auth:sanctum'])->group(function () {
 
-    // ------------------------------------------------------------------------
-    // USERS
-    // ------------------------------------------------------------------------
-    Route::get('/users/profile', [UserController::class, 'profile']);
-    Route::get('/users/tasks', [UserController::class, 'tasks']); // Con filtros opcionales
+//     // ------------------------------------------------------------------------
+//     // USERS
+//     // ------------------------------------------------------------------------
+//     Route::get('/users/profile', [UserController::class, 'profile']);
+//     Route::get('/users/tasks', [UserController::class, 'tasks']); // Con filtros opcionales
 
-    // ------------------------------------------------------------------------
-    // GROUPS (Workspaces/Equipos)
-    // ------------------------------------------------------------------------
-    Route::get('/groups', [GroupController::class, 'index']); // Sidebar: grupos con folders y boards
-    Route::post('/groups', [GroupController::class, 'store']);
-    Route::get('/groups/{group}', [GroupController::class, 'show']);
-    Route::put('/groups/{group}', [GroupController::class, 'update']);
-    Route::delete('/groups/{group}', [GroupController::class, 'destroy']);
+//     // ------------------------------------------------------------------------
+//     // GROUPS (Workspaces/Equipos)
+//     // ------------------------------------------------------------------------
+//     Route::get('/groups', [GroupController::class, 'index']); // Sidebar: grupos con folders y boards
+//     Route::post('/groups', [GroupController::class, 'store']);
+//     Route::get('/groups/{group}', [GroupController::class, 'show']);
+//     Route::put('/groups/{group}', [GroupController::class, 'update']);
+//     Route::delete('/groups/{group}', [GroupController::class, 'destroy']);
     
-    // Gestión de miembros
-    Route::post('/groups/{group}/members', [GroupController::class, 'addMember']);
-    Route::delete('/groups/{group}/members/{userId}', [GroupController::class, 'removeMember']);
-    Route::get('/groups/{group}/members', [GroupController::class, 'members']);
+//     // Gestión de miembros
+//     Route::post('/groups/{group}/members', [GroupController::class, 'addMember']);
+//     Route::delete('/groups/{group}/members/{userId}', [GroupController::class, 'removeMember']);
+//     Route::get('/groups/{group}/members', [GroupController::class, 'members']);
     
-    // Estadísticas
-    Route::get('/groups/{group}/stats', [GroupController::class, 'stats']);
+//     // Estadísticas
+//     Route::get('/groups/{group}/stats', [GroupController::class, 'stats']);
 
-    // ------------------------------------------------------------------------
-    // FOLDERS (Carpetas)
-    // ------------------------------------------------------------------------
-    Route::get('/folders', [FolderController::class, 'index']);
-    Route::post('/folders', [FolderController::class, 'store']);
-    Route::get('/folders/{folder}', [FolderController::class, 'show']);
-    Route::put('/folders/{folder}', [FolderController::class, 'update']);
-    Route::delete('/folders/{folder}', [FolderController::class, 'destroy']);
+//     // ------------------------------------------------------------------------
+//     // FOLDERS (Carpetas)
+//     // ------------------------------------------------------------------------
+//     Route::get('/folders', [FolderController::class, 'index']);
+//     Route::post('/folders', [FolderController::class, 'store']);
+//     Route::get('/folders/{folder}', [FolderController::class, 'show']);
+//     Route::put('/folders/{folder}', [FolderController::class, 'update']);
+//     Route::delete('/folders/{folder}', [FolderController::class, 'destroy']);
 
-    // ------------------------------------------------------------------------
-    // BOARDS (Tableros)
-    // ------------------------------------------------------------------------
-    Route::get('/boards/{board}', [BoardController::class, 'show']); // Principal: board completo
-    Route::post('/boards', [BoardController::class, 'store']);
-    Route::put('/boards/{board}', [BoardController::class, 'update']);
-    Route::delete('/boards/{board}', [BoardController::class, 'destroy']);
+//     // ------------------------------------------------------------------------
+//     // BOARDS (Tableros)
+//     // ------------------------------------------------------------------------
+//     Route::get('/boards/{board}', [BoardController::class, 'show']); // Principal: board completo
+//     Route::post('/boards', [BoardController::class, 'store']);
+//     Route::put('/boards/{board}', [BoardController::class, 'update']);
+//     Route::delete('/boards/{board}', [BoardController::class, 'destroy']);
     
-    // Logs y estadísticas
-    Route::get('/boards/{board}/logs', [BoardController::class, 'logs']);
-    Route::get('/boards/{board}/stats', [BoardController::class, 'stats']);
+//     // Logs y estadísticas
+//     Route::get('/boards/{board}/logs', [BoardController::class, 'logs']);
+//     Route::get('/boards/{board}/stats', [BoardController::class, 'stats']);
 
-    // ------------------------------------------------------------------------
-    // COLUMNS (Columnas)
-    // ------------------------------------------------------------------------
-    Route::post('/columns', [ColumnController::class, 'store']);
-    Route::put('/columns/{column}', [ColumnController::class, 'update']);
-    Route::delete('/columns/{column}', [ColumnController::class, 'destroy']);
+//     // ------------------------------------------------------------------------
+//     // COLUMNS (Columnas)
+//     // ------------------------------------------------------------------------
+//     Route::post('/columns', [ColumnController::class, 'store']);
+//     Route::put('/columns/{column}', [ColumnController::class, 'update']);
+//     Route::delete('/columns/{column}', [ColumnController::class, 'destroy']);
     
-    // Reordenamiento
-    Route::put('/columns/{column}/reorder', [ColumnController::class, 'reorder']);
-    Route::post('/columns/batch-reorder', [ColumnController::class, 'batchReorder']);
+//     // Reordenamiento
+//     Route::put('/columns/{column}/reorder', [ColumnController::class, 'reorder']);
+//     Route::post('/columns/batch-reorder', [ColumnController::class, 'batchReorder']);
 
-    // ------------------------------------------------------------------------
-    // TASKS (Tareas/Tarjetas)
-    // ------------------------------------------------------------------------
-    Route::get('/tasks/{task}', [TaskController::class, 'show']);
-    Route::post('/tasks', [TaskController::class, 'store']);
-    Route::put('/tasks/{task}', [TaskController::class, 'update']);
-    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+//     // ------------------------------------------------------------------------
+//     // TASKS (Tareas/Tarjetas)
+//     // ------------------------------------------------------------------------
+//     Route::get('/tasks/{task}', [TaskController::class, 'show']);
+//     Route::post('/tasks', [TaskController::class, 'store']);
+//     Route::put('/tasks/{task}', [TaskController::class, 'update']);
+//     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
     
-    // Reordenamiento y movimiento
-    Route::put('/tasks/{task}/reorder', [TaskController::class, 'reorder']);
-    Route::put('/tasks/{task}/move', [TaskController::class, 'move']);
-    Route::post('/tasks/batch-reorder', [TaskController::class, 'batchReorder']);
+//     // Reordenamiento y movimiento
+//     Route::put('/tasks/{task}/reorder', [TaskController::class, 'reorder']);
+//     Route::put('/tasks/{task}/move', [TaskController::class, 'move']);
+//     Route::post('/tasks/batch-reorder', [TaskController::class, 'batchReorder']);
     
-    // Asignaciones de usuarios
-    Route::post('/tasks/{task}/assign', [TaskController::class, 'assign']);
-    Route::delete('/tasks/{task}/assign/{userId}', [TaskController::class, 'unassign']);
-    Route::get('/tasks/{task}/assigned-users', [TaskController::class, 'assignedUsers']);
+//     // Asignaciones de usuarios
+//     Route::post('/tasks/{task}/assign', [TaskController::class, 'assign']);
+//     Route::delete('/tasks/{task}/assign/{userId}', [TaskController::class, 'unassign']);
+//     Route::get('/tasks/{task}/assigned-users', [TaskController::class, 'assignedUsers']);
     
-    // Logs
-    Route::get('/tasks/{task}/logs', [TaskController::class, 'logs']);
+//     // Logs
+//     Route::get('/tasks/{task}/logs', [TaskController::class, 'logs']);
 
-});
+// });

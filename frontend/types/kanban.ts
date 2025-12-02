@@ -51,6 +51,7 @@ export interface BoardType {
   columns: ColumnType[];
   activityLog: HistoryLogType[];
   groupId?: string; // Optional for backward compatibility
+  // folderId: string;
   createdAt?: number;
   members: MemberType[];
   createdBy?: string; // Username of the creator
