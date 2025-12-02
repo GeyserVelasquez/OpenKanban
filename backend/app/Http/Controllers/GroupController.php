@@ -18,11 +18,11 @@ class GroupController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
+
         $groups = $user->groups()
             ->with(['folders.boards'])
             ->get();
-        
+
         return response()->json($groups, 200);
     }
 
@@ -189,6 +189,58 @@ class GroupController extends Controller
 
         return response()->json([
             'members' => $members
+        ], 200);
+    }
+
+    /**
+     * GET /api/groups/{id}/stats
+     * Estadísticas del grupo
+     */
+    public function stats(Group $group)
+    {
+        // Verificar que el usuario pertenece al grupo
+        if (!$group->users->contains(auth()->id())) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $boardsCount = $group->folders()->withCount('boards')->get()->sum('boards_count');
+
+        // Contar tareas a través de folders -> boards -> columns -> tasks
+        $tasksCount = DB::table('tasks')
+            ->join('columns', 'tasks.column_id', '=', 'columns.id')
+            ->join('boards', 'columns.board_id', '=', 'boards.id')
+            ->join('folders', 'boards.folder_id', '=', 'folders.id')
+            ->where('folders.group_id', $group->id)
+            ->count();
+
+        $completedTasks = DB::table('tasks')
+            ->join('columns', 'tasks.column_id', '=', 'columns.id')
+            ->join('boards', 'columns.board_id', '=', 'boards.id')
+            ->join('folders', 'boards.folder_id', '=', 'folders.id')
+            ->join('states', 'tasks.state_id', '=', 'states.id')
+            ->where('folders.group_id', $group->id)
+            ->whereIn('states.name', ['Completada', 'Hecho', 'Done', 'Completado'])
+            ->count();
+
+        $tasksByState = DB::table('tasks')
+            ->join('columns', 'tasks.column_id', '=', 'columns.id')
+            ->join('boards', 'columns.board_id', '=', 'boards.id')
+            ->join('folders', 'boards.folder_id', '=', 'folders.id')
+            ->join('states', 'tasks.state_id', '=', 'states.id')
+            ->where('folders.group_id', $group->id)
+            ->select('states.name as state', DB::raw('count(*) as count'))
+            ->groupBy('states.name')
+            ->get();
+
+        return response()->json([
+            'group_id' => $group->id,
+            'name' => $group->name,
+            'members_count' => $group->users()->count(),
+            'boards_count' => $boardsCount,
+            'tasks_count' => $tasksCount,
+            'completed_tasks' => $completedTasks,
+            'pending_tasks' => $tasksCount - $completedTasks,
+            'tasks_by_state' => $tasksByState,
         ], 200);
     }
 

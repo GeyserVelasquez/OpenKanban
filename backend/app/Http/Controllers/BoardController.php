@@ -30,10 +30,10 @@ class BoardController extends Controller
 
         $board->load([
             'folder.group',
-            'columns' => function($query) {
+            'columns' => function ($query) {
                 $query->orderBy('position');
             },
-            'columns.tasks' => function($query) {
+            'columns.tasks' => function ($query) {
                 $query->orderBy('position');
             },
             'columns.tasks.assignedUsers:id,name,email',
