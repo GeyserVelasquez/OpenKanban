@@ -78,6 +78,7 @@ interface WorkspaceContextType {
   updateTask: (taskId: string, data: Partial<CardType>) => Promise<void>;
   moveTask: (taskId: string, newColumnId: string, position?: number) => Promise<void>;
   getAllBoards: () => BoardType[];
+  isLoading: boolean;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -645,6 +646,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     updateTask,
     moveTask,
     getAllBoards,
+    isLoading: !mounted,
   };
 
   return (
