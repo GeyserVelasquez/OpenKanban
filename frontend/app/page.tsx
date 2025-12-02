@@ -169,27 +169,35 @@ export default function Home() {
     }
   }, [workspace.activeBoardId]);
 
-  // Initialize board members if not present
+  // Load board members from API
   useEffect(() => {
-    if (!board || !mounted) return;
+    if (!board?.groupId || !mounted) return;
 
-    // If board doesn't have members array, initialize it with the current user as owner
-    if (!board.members || board.members.length === 0) {
-      const initialMember: MemberType = {
-        id: `member-${Date.now()}`,
-        username: CURRENT_USERNAME,
-        name: CURRENT_USER,
-        role: "owner",
-        joinedAt: Date.now(),
-      };
+    const fetchMembers = async () => {
+      try {
+        await api.get("http://localhost:8000/sanctum/csrf-cookie");
+        const response = await api.get(`http://localhost:8000/api/groups/${board.groupId}/members`);
 
-      setBoard((prev) => prev ? ({
-        ...prev,
-        members: [initialMember],
-        createdBy: CURRENT_USERNAME,
-      }) : null);
-    }
-  }, [board?.id, mounted]);
+        const apiMembers = response.data.members || [];
+        const mappedMembers: MemberType[] = apiMembers.map((m: any) => ({
+          id: String(m.id),
+          username: m.email, // Use email as username
+          name: m.name,
+          role: "member", // Default role
+          joinedAt: new Date(m.joined_at).getTime(),
+        }));
+
+        setBoard((prev) => prev ? ({
+          ...prev,
+          members: mappedMembers,
+        }) : null);
+      } catch (error) {
+        console.error("Error fetching board members:", error);
+      }
+    };
+
+    fetchMembers();
+  }, [board?.groupId, mounted]);
 
   const columnIds = useMemo(() => board?.columns.map((col) => col.id) || [], [board?.columns]);
 
