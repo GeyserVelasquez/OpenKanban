@@ -12,7 +12,7 @@ class CreateTasksTable extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('color')->nullable();
+            $table->string('color')->nullable();
             $table->foreignId('column_id')->constrained('columns')->onDelete('cascade');
             $table->foreignId('state_id')->nullable()->constrained('states')->onDelete('set null');
             $table->foreignId('creator_id')->constrained('users')->onDelete('cascade');

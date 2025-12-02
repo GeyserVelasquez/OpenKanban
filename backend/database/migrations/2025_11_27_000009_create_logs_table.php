@@ -12,6 +12,7 @@ class CreateLogsTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('task_id')->nullable()->constrained('tasks')->onDelete('cascade');
+            $table->foreignId('board_id')->nullable()->constrained('boards')->onDelete('cascade');
             $table->text('message')->nullable();
             $table->timestamps();
         });
