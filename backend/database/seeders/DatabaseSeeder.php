@@ -21,7 +21,10 @@ class DatabaseSeeder extends Seeder
             StateSeeder::class,
             GroupSeeder::class,
             
-            // 2. Folders dependen de Groups
+            // 2. GroupUser depende de Groups y Users
+            GroupUserSeeder::class,
+            
+            // 3. Folders dependen de Groups
             FolderSeeder::class,
             
             // 3. Boards dependen de Folders
