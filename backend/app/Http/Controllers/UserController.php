@@ -30,10 +30,14 @@ class UserController extends Controller
     public function profile()
     {
         $user = Auth::user()->loadCount(['groups', 'tasks']);
-        
+
         return response()->json($user, 200);
     }
 
+    /**
+     * GET /api/users/tasks
+     * Obtener tareas asignadas al usuario con filtros opcionales
+     */
     /**
      * GET /api/users/tasks
      * Obtener tareas asignadas al usuario con filtros opcionales
@@ -54,7 +58,7 @@ class UserController extends Controller
 
         // Filtro por grupo
         if ($request->has('group_id')) {
-            $query->whereHas('column.board.folder', function($q) use ($request) {
+            $query->whereHas('column.board.folder', function ($q) use ($request) {
                 $q->where('group_id', $request->group_id);
             });
         }
@@ -64,6 +68,25 @@ class UserController extends Controller
         return response()->json([
             'tasks' => $tasks
         ], 200);
+    }
+
+    public function getPreferences()
+    {
+        // Retornar preferencias por defecto o guardadas si existieran
+        return response()->json([
+            'theme' => 'system', // O lo que el usuario tenga guardado
+            'language' => 'es'
+        ]);
+    }
+
+    public function updatePreferences(Request $request)
+    {
+        // Validar y guardar preferencias
+        // Por ahora solo devolvemos éxito para evitar errores en frontend
+        return response()->json([
+            'message' => 'Preferencias actualizadas',
+            'preferences' => $request->all()
+        ]);
     }
 
     /**

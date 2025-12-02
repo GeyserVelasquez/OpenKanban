@@ -13,6 +13,7 @@ import {
   WorkspaceData,
   ColumnType,
   HistoryLogType,
+  CardType,
 } from "@/types/kanban";
 
 const CURRENT_USER = "Manuel Casique";
@@ -23,28 +24,39 @@ const createHistoryLog = (message: string): HistoryLogType => ({
   message,
 });
 
-const createDefaultColumns = (): ColumnType[] => {
-  const timestamp = Date.now();
-  return [
-    {
-      id: `col-${timestamp}-1`,
-      title: "Pendiente",
-      color: "bg-slate-200 dark:bg-gray-700",
-      cards: [],
-    },
-    {
-      id: `col-${timestamp}-2`,
-      title: "En Proceso",
-      color: "bg-blue-200 dark:bg-blue-900/40",
-      cards: [],
-    },
-    {
-      id: `col-${timestamp}-3`,
-      title: "Hecho",
-      color: "bg-green-200 dark:bg-green-900/40",
-      cards: [],
-    },
+const createDefaultColumns = async (
+  boardId: string
+): Promise<ColumnType[]> => {
+  const defaultColsData = [
+    { title: "Pendiente", color: "bg-slate-200 dark:bg-gray-700" },
+    { title: "En Proceso", color: "bg-blue-200 dark:bg-blue-900/40" },
+    { title: "Hecho", color: "bg-green-200 dark:bg-green-900/40" },
   ];
+
+  const createdColumns: ColumnType[] = [];
+
+  try {
+    await api.get("http://localhost:8000/sanctum/csrf-cookie");
+
+    for (const colData of defaultColsData) {
+      const response = await api.post("http://localhost:8000/api/columns", {
+        title: colData.title,
+        color: colData.color,
+        board_id: boardId,
+      });
+
+      createdColumns.push({
+        id: response.data.id.toString(),
+        title: response.data.title || response.data.name || colData.title,
+        color: response.data.color || colData.color,
+        cards: [],
+      });
+    }
+  } catch (error) {
+    console.error("Error creando columnas por defecto:", error);
+  }
+
+  return createdColumns;
 };
 
 interface WorkspaceContextType {
@@ -54,10 +66,16 @@ interface WorkspaceContextType {
   renameGroup: (groupId: string, newTitle: string) => void;
   createBoard: (groupId: string, title: string) => Promise<string>;
   deleteBoard: (boardId: string) => Promise<void>;
-  renameBoard: (boardId: string, newTitle: string) => void;
-  setActiveBoard: (boardId: string) => void;
+  renameBoard: (boardId: string, newTitle: string) => Promise<void>;
+  setActiveBoard: (boardId: string) => Promise<void>;
   getActiveBoard: () => BoardType | null;
-  updateBoard: (boardId: string, data: Partial<BoardType>) => void;
+  updateBoard: (boardId: string, data: Partial<BoardType>) => Promise<void>;
+  updateColumn: (columnId: string, data: { name?: string; color?: string }) => Promise<void>;
+  updateColumnPosition: (columnId: string, newPosition: number) => Promise<void>;
+  createColumn: (boardId: string, name: string, color: string, position: number) => Promise<ColumnType | null>;
+  deleteColumn: (columnId: string) => Promise<boolean>;
+  createTask: (columnId: string, title: string, description: string, priority: "low" | "medium" | "high") => Promise<CardType | null>;
+  updateTask: (taskId: string, data: Partial<CardType>) => Promise<void>;
   getAllBoards: () => BoardType[];
 }
 
@@ -143,12 +161,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       mounted = false;
     };
   }, []);
-
-  // Save to localStorage whenever workspace changes
-  // useEffect(() => {
-  //   if (!mounted) return;
-  //   localStorage.setItem("OPENKANBAN_WORKSPACE", JSON.stringify(workspace));
-  // }, [workspace, mounted]);
 
   const createGroup = async (
     title: string,
@@ -241,7 +253,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     groupId: string,
     title: string
   ): Promise<string> => {
-    if (!title.trim()) return ""; // Validación básica
+    if (!title.trim()) return "";
 
     try {
       // 1. Obtener CSRF y preparar payload
@@ -254,23 +266,37 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       };
 
       // 2. Llamada a la API (POST /api/boards)
-      const response = await api.post<BoardType>(
+      // Backend crea el board Y las 3 columnas por defecto automáticamente
+      const response = await api.post<any>(
         "http://localhost:8000/api/boards",
         boardPayload
       );
       const createdApiBoard = response.data;
+      const newBoardId = createdApiBoard.id.toString();
 
-      const defaultColumns = createDefaultColumns();
+      // 3. Mapear columnas del backend al formato frontend
+      const backendColumns = Array.isArray(createdApiBoard.columns)
+        ? createdApiBoard.columns
+        : [];
+
+      const mappedColumns: ColumnType[] = backendColumns.map((col: any) => ({
+        id: col.id.toString(),
+        title: col.name || col.title || "Sin título",
+        color: col.color || "bg-slate-200 dark:bg-gray-700",
+        cards: Array.isArray(col.tasks) ? col.tasks : [],
+      }));
+
       const activityLog = [createHistoryLog("Tablero creado")];
 
       const newBoard: BoardType = {
-        id: createdApiBoard.id.toString(),
+        id: newBoardId,
         name: createdApiBoard.name,
-        backgroundColor: "bg-gray-100 dark:bg-gray-800",
-        columns: defaultColumns,
+        backgroundColor: createdApiBoard.color || "bg-gray-100 dark:bg-gray-800",
+        columns: mappedColumns,
         activityLog: activityLog,
-        groupId: createdApiBoard.groupId?.toString(),
+        groupId: groupId,
         createdAt: Date.now(),
+        members: [],
       };
 
       setWorkspace((prev) => ({
@@ -312,37 +338,63 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }
   };
 
-  const renameBoard = (boardId: string, newTitle: string) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      groups: prev.groups.map((g) => ({
-        ...g,
-        boards: g.boards.map((b) =>
-          b.id === boardId ? { ...b, name: newTitle } : b
-        ),
-      })),
-    }));
+  const renameBoard = async (boardId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      await api.put(`http://localhost:8000/api/boards/${boardId}`, {
+        name: newTitle.trim(),
+      });
+
+      setWorkspace((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          boards: g.boards.map((b) =>
+            b.id === boardId ? { ...b, name: newTitle.trim() } : b
+          ),
+        })),
+      }));
+    } catch (error) {
+      console.error(`Error renaming board ${boardId}:`, error);
+      alert("Error al renombrar el tablero. Verifica la conexión.");
+    }
   };
 
   const setActiveBoard = async (boardId: string) => {
-  try {
-    // ... (llamada a API igual que antes)
-    const response = await api.get<BoardType>(`http://localhost:8000/api/boards/${boardId}`);
-    const fullBoardData = response.data;
+    try {
+      // 1. Llamada a la API para obtener el tablero completo
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const response = await api.get<any>(
+        `http://localhost:8000/api/boards/${boardId}`
+      );
+      const fullBoardData = response.data;
 
-    // 2. Normalización de datos:
-    const safeBoardData = {
-      ...fullBoardData,
-      columns: Array.isArray(fullBoardData.columns)
+      // 2. Normalización de datos: mapear estructura backend a frontend
+      const backendColumns = Array.isArray(fullBoardData.columns)
         ? fullBoardData.columns
-            .map((col: any) => ({
-              ...col,
-              title: col.title || col.name || "", // <--- INTENTA RECUPERAR EL NOMBRE REAL
-              cards: Array.isArray(col.cards) ? col.cards : [],
-            }))
-            .filter((col: any) => col.title.trim() !== "") // <--- SI NO TIENE TÍTULO, NO SE MUESTRA
-        : [],
-    };
+        : [];
+
+      const safeBoardData = {
+        ...fullBoardData,
+        backgroundColor: fullBoardData.color || fullBoardData.backgroundColor || "bg-gray-100 dark:bg-gray-800",
+        columns: backendColumns
+          .map((col: any) => ({
+            id: col.id.toString(),
+            title: col.name || col.title || "",
+            color: col.color || "bg-slate-200 dark:bg-gray-700",
+            cards: Array.isArray(col.tasks)
+              ? col.tasks.map((task: any) => ({
+                ...task,
+                id: task.id.toString(),
+                columnId: col.id.toString(),
+              }))
+              : [],
+          }))
+          .filter((col: any) => col.title.trim() !== ""),
+      };
+
       // 3. Actualizar el estado del workspace con los datos frescos y seguros
       setWorkspace((prev) => ({
         ...prev,
@@ -359,15 +411,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }
   };
 
-
-
-  // const setActiveBoard = (boardId: string) => {
-  //   setWorkspace((prev) => ({
-  //     ...prev,
-  //     activeBoardId: boardId,
-  //   }));
-  // };
-
   const getActiveBoard = (): BoardType | null => {
     if (!workspace.activeBoardId) return null;
 
@@ -379,14 +422,182 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     return null;
   };
 
-  const updateBoard = (boardId: string, data: Partial<BoardType>) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      groups: prev.groups.map((g) => ({
-        ...g,
-        boards: g.boards.map((b) => (b.id === boardId ? { ...b, ...data } : b)),
-      })),
-    }));
+  const updateBoard = async (boardId: string, data: Partial<BoardType>) => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+
+      // Only send fields the backend accepts (name and color)
+      const backendData: any = {};
+      if (data.name !== undefined) {
+        backendData.name = data.name;
+      }
+      if (data.backgroundColor !== undefined) {
+        backendData.color = data.backgroundColor;
+      }
+
+      if (Object.keys(backendData).length > 0) {
+        const numericId = parseInt(boardId, 10);
+        await api.put(`http://localhost:8000/api/boards/${numericId}`, backendData);
+      }
+
+      // Update local state with all provided data
+      setWorkspace((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          boards: g.boards.map((b) =>
+            b.id === boardId ? { ...b, ...data } : b
+          ),
+        })),
+      }));
+    } catch (error) {
+      console.error(`Error actualizando el tablero ${boardId}:`, error);
+      alert("Error al guardar los cambios. Verifica tu conexión.");
+    }
+  };
+
+  const updateColumn = async (columnId: string, data: { name?: string; color?: string }) => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+
+      const numericId = parseInt(columnId, 10);
+      await api.put(`http://localhost:8000/api/columns/${numericId}`, data);
+
+      // Update local state
+      setWorkspace((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          boards: g.boards.map((b) => ({
+            ...b,
+            columns: b.columns.map((col) =>
+              col.id === columnId
+                ? {
+                  ...col,
+                  ...(data.name && { title: data.name }),
+                  ...(data.color && { color: data.color }),
+                }
+                : col
+            ),
+          })),
+        })),
+      }));
+    } catch (error) {
+      console.error(`Error updating column ${columnId}:`, error);
+      alert("Error al actualizar la columna. Verifica tu conexión.");
+    }
+  };
+
+  const updateColumnPosition = async (columnId: string, newPosition: number) => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const numericId = parseInt(columnId, 10);
+      await api.put(`http://localhost:8000/api/columns/${numericId}`, {
+        position: newPosition,
+      });
+    } catch (error) {
+      console.error(`Error updating column position ${columnId}:`, error);
+    }
+  };
+
+  const createColumn = async (
+    boardId: string,
+    name: string,
+    color: string,
+    position: number
+  ): Promise<ColumnType | null> => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const response = await api.post("http://localhost:8000/api/columns", {
+        name,
+        color,
+        board_id: parseInt(boardId, 10),
+        position,
+      });
+
+      return {
+        id: response.data.id.toString(),
+        title: response.data.name || name,
+        color: response.data.color || color,
+        cards: [],
+      };
+    } catch (error) {
+      console.error("Error creating column:", error);
+      alert("Error al crear la columna. Verifica tu conexión.");
+      return null;
+    }
+  };
+
+  const deleteColumn = async (columnId: string): Promise<boolean> => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const numericId = parseInt(columnId, 10);
+      await api.delete(`http://localhost:8000/api/columns/${numericId}`);
+      return true;
+    } catch (error) {
+      console.error("Error deleting column:", error);
+      alert("Error al eliminar la columna. Verifica tu conexión.");
+      return false;
+    }
+  };
+
+  const createTask = async (
+    columnId: string,
+    title: string,
+    description: string,
+    priority: "low" | "medium" | "high"
+  ): Promise<CardType | null> => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const response = await api.post("http://localhost:8000/api/tasks", {
+        name: title,
+        description,
+        column_id: parseInt(columnId, 10),
+        state_id: 1, // Default state (To Do)
+        priority,
+        position: 1024.0,
+      });
+
+      return {
+        id: response.data.id.toString(),
+        title: response.data.name || response.data.title, // Handle name/title mismatch
+        description: response.data.description || "",
+        columnId: columnId,
+        priority: response.data.priority || priority,
+        history: [],
+        tags: [],
+        comments: [],
+      };
+    } catch (error) {
+      console.error("Error creating task:", error);
+      alert("Error al crear la tarea. Verifica tu conexión.");
+      return null;
+    }
+  };
+
+  const updateTask = async (taskId: string, data: Partial<CardType>) => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const numericId = parseInt(taskId, 10);
+
+      // Map priority to color for backend persistence
+      let color = undefined;
+      if (data.priority) {
+        switch (data.priority) {
+          case "high": color = "#EF4444"; break;
+          case "medium": color = "#F97316"; break;
+          case "low": color = "#3B82F6"; break;
+        }
+      }
+
+      await api.put(`http://localhost:8000/api/tasks/${numericId}`, {
+        name: data.title,
+        description: data.description,
+        color: color,
+      });
+    } catch (error) {
+      console.error(`Error updating task ${taskId}:`, error);
+    }
   };
 
   const getAllBoards = (): BoardType[] => {
@@ -404,6 +615,12 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     setActiveBoard,
     getActiveBoard,
     updateBoard,
+    updateColumn,
+    updateColumnPosition,
+    createColumn,
+    deleteColumn,
+    createTask,
+    updateTask,
     getAllBoards,
   };
 

@@ -39,7 +39,7 @@ const CURRENT_USERNAME = "manuelcasique"; // Username del usuario actual
 const createHistoryLog = (message: string): HistoryLogType => ({
   timestamp: Date.now(),
   userId: CURRENT_USER,
-  message, 
+  message,
 });
 
 const IconPlus = ({ className }: { className?: string }) => (
@@ -118,14 +118,14 @@ const EmptyState = () => (
 );
 
 export default function Home() {
-  const { getActiveBoard, updateBoard, workspace } = useWorkspace();
+  const { getActiveBoard, updateBoard, updateColumn, createColumn, deleteColumn, createTask, updateTask, workspace } = useWorkspace();
   const [board, setBoard] = useState<BoardType | null>(null);
   const [mounted, setMounted] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const [activeColumn, setActiveColumn] = useState<ColumnType | null>(null);
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
 
@@ -144,7 +144,7 @@ export default function Home() {
 
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState("");
-  
+
   const [dragStartColumnId, setDragStartColumnId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -169,16 +169,10 @@ export default function Home() {
     }
   }, [workspace.activeBoardId]);
 
-  // Sync board changes to workspace
-  useEffect(() => {
-    if (!mounted || !board) return;
-    updateBoard(board.id, board);
-  }, [board, mounted]);
-
   // Initialize board members if not present
   useEffect(() => {
     if (!board || !mounted) return;
-    
+
     // If board doesn't have members array, initialize it with the current user as owner
     if (!board.members || board.members.length === 0) {
       const initialMember: MemberType = {
@@ -188,7 +182,7 @@ export default function Home() {
         role: "owner",
         joinedAt: Date.now(),
       };
-      
+
       setBoard((prev) => prev ? ({
         ...prev,
         members: [initialMember],
@@ -202,20 +196,18 @@ export default function Home() {
   const handleColorChange = (newColor: string) => {
     if (!board) return;
     setBoard((prev) => prev ? { ...prev, backgroundColor: newColor } : null);
+    // Persist to backend
+    updateBoard(board.id, { backgroundColor: newColor });
   };
 
-  const handleAddNewCard = (columnId: string, title: string) => {
+  const handleAddNewCard = async (columnId: string, title: string) => {
     if (!board) return;
-    const newCard: CardType = {
-      id: `card-${Date.now()}`,
-      title,
-      description: "",
-      columnId,
-      priority: "medium",
-      history: [createHistoryLog("Tarjeta creada")],
-      tags: [],
-      comments: [],
-    };
+
+    const newCard = await createTask(columnId, title, "", "medium");
+
+    if (!newCard) {
+      return; // Error already shown by createTask
+    }
 
     setBoard((prev) => prev ? ({
       ...prev,
@@ -287,9 +279,9 @@ export default function Home() {
 
   const handleSaveCardEdit = () => {
     if (!board || !editingCard || !editCardTitle.trim()) return;
-    
+
     const changes: string[] = [];
-    
+
     if (editCardTitle.trim() !== editingCard.title) changes.push("título");
     if (editCardDescription.trim() !== editingCard.description) changes.push("descripción");
     if (editCardPriority !== editingCard.priority) changes.push("prioridad");
@@ -306,7 +298,7 @@ export default function Home() {
 
     setBoard((prev) => prev ? ({
       ...prev,
-      activityLog: changes.length > 0 
+      activityLog: changes.length > 0
         ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${editingCard.title}"`), ...prev.activityLog]
         : prev.activityLog,
       columns: prev.columns.map((col) => ({
@@ -316,6 +308,9 @@ export default function Home() {
         ),
       })),
     }) : null);
+
+    // Persist changes to backend
+    updateTask(editingCard.id, updatedCard);
 
     setEditingCard(null);
     setEditCardTitle("");
@@ -356,21 +351,24 @@ export default function Home() {
     if (!originalCard) return;
 
     const changes: string[] = [];
-    
+
     if (updatedCard.title !== originalCard.title) changes.push("título");
     if (updatedCard.description !== originalCard.description) changes.push("descripción");
     if (updatedCard.priority !== originalCard.priority) changes.push("prioridad");
 
+    // Persist changes to backend
+    updateTask(updatedCard.id, updatedCard);
+
     const cardWithHistory: CardType = changes.length > 0
       ? {
-          ...updatedCard,
-          history: [...updatedCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)],
-        }
+        ...updatedCard,
+        history: [...updatedCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)],
+      }
       : updatedCard;
 
     setBoard((prev) => prev ? ({
       ...prev,
-      activityLog: changes.length > 0 
+      activityLog: changes.length > 0
         ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${updatedCard.title}"`), ...prev.activityLog]
         : prev.activityLog,
       columns: prev.columns.map((col) => ({
@@ -382,24 +380,28 @@ export default function Home() {
     }) : null);
   };
 
-  const handleAddNewColumn = (title: string, insertIndex?: number) => {
+  const handleAddNewColumn = async (title: string, insertIndex?: number) => {
     if (!board) return;
-    const newColumn: ColumnType = {
-      id: `col-${Date.now()}`,
-      title,
-      color: "bg-slate-200 dark:bg-gray-700",
-      cards: [],
-    };
+
+    const position = insertIndex !== undefined
+      ? (insertIndex + 1) * 1024.0
+      : (board.columns.length + 1) * 1024.0;
+
+    const newColumn = await createColumn(board.id, title, "bg-slate-200 dark:bg-gray-700", position);
+
+    if (!newColumn) {
+      return; // Error already shown by createColumn
+    }
 
     if (insertIndex !== undefined) {
       setBoard((prev) => {
         if (!prev) return null;
         const newColumns = [...prev.columns];
         newColumns.splice(insertIndex, 0, newColumn);
-        return { 
-          ...prev, 
+        return {
+          ...prev,
           activityLog: [createHistoryLog(`Añadió lista "${title}"`), ...prev.activityLog],
-          columns: newColumns 
+          columns: newColumns
         };
       });
     } else {
@@ -411,9 +413,16 @@ export default function Home() {
     }
   };
 
-  const handleDeleteColumn = (columnId: string) => {
+  const handleDeleteColumn = async (columnId: string) => {
     if (!board) return;
     const col = board.columns.find(c => c.id === columnId);
+
+    const success = await deleteColumn(columnId);
+
+    if (!success) {
+      return; // Error already shown by deleteColumn
+    }
+
     setBoard((prev) => prev ? ({
       ...prev,
       activityLog: col ? [createHistoryLog(`Eliminó lista "${col.title}"`), ...prev.activityLog] : prev.activityLog,
@@ -438,6 +447,8 @@ export default function Home() {
             : col
         ),
       }) : null);
+      // Persist to backend
+      updateColumn(columnId, { name: editingColumnTitle.trim() });
     }
     setEditingColumnId(null);
     setEditingColumnTitle("");
@@ -469,21 +480,23 @@ export default function Home() {
         col.id === columnId ? { ...col, color } : col
       ),
     }) : null);
+    // Persist to backend
+    updateColumn(columnId, { color });
   };
 
   // Handle invite member
   const handleInviteMember = async (username: string): Promise<boolean> => {
     if (!board) return false;
-    
+
     // Check if user is already a member
     const isAlreadyMember = board.members?.some(
       (member) => member.username.toLowerCase() === username.toLowerCase()
     );
-    
+
     if (isAlreadyMember) {
       return false; // User already exists in the board
     }
-    
+
     // Simulate API call to check if user exists
     // In production, this would be an actual API call to your backend
     // For now, we'll simulate some existing users
@@ -494,15 +507,15 @@ export default function Home() {
       { username: "analopez", name: "Ana López" },
       { username: "luismartinez", name: "Luis Martínez" },
     ];
-    
+
     const foundUser = mockUsers.find(
       (user) => user.username.toLowerCase() === username.toLowerCase()
     );
-    
+
     if (!foundUser) {
       return false; // User not found
     }
-    
+
     // Add user to board members
     const newMember: MemberType = {
       id: `member-${Date.now()}`,
@@ -511,7 +524,7 @@ export default function Home() {
       role: "member",
       joinedAt: Date.now(),
     };
-    
+
     setBoard((prev) => prev ? ({
       ...prev,
       members: [...(prev.members || []), newMember],
@@ -520,7 +533,7 @@ export default function Home() {
         ...prev.activityLog,
       ],
     }) : null);
-    
+
     return true; // User successfully invited
   };
 
@@ -580,7 +593,7 @@ export default function Home() {
         // Different column
         const newColumns = [...board.columns];
         const activeCard = newColumns[activeColumnIndex].cards[activeCardIndex];
-        
+
         newColumns[activeColumnIndex].cards = [
           ...newColumns[activeColumnIndex].cards.filter((card) => card.id !== activeId),
         ];
@@ -669,25 +682,25 @@ export default function Home() {
       const activeColumnIndex = board.columns.findIndex((col) =>
         col.cards.some((card) => card.id === activeId)
       );
-      
-      const overColumnIndex = board.columns.findIndex((col) => 
+
+      const overColumnIndex = board.columns.findIndex((col) =>
         col.id === overId || col.cards.some((card) => card.id === overId)
       );
 
       if (activeColumnIndex !== -1 && overColumnIndex !== -1) {
         const activeColumn = board.columns[activeColumnIndex];
         const overColumn = board.columns[overColumnIndex];
-        
+
         // Check for column change using the stored start column ID
         const hasChangedColumn = dragStartColumnId && dragStartColumnId !== activeColumn.id;
 
         // Calculate new cards order
         const activeCardIndex = activeColumn.cards.findIndex((card) => card.id === activeId);
         const overCardIndex = overColumn.cards.findIndex((card) => card.id === overId);
-        
+
         let newCards = activeColumn.cards;
         if (activeColumnIndex === overColumnIndex && activeId !== overId) {
-           newCards = arrayMove(activeColumn.cards, activeCardIndex, overCardIndex);
+          newCards = arrayMove(activeColumn.cards, activeCardIndex, overCardIndex);
         }
 
         setBoard((prev) => {
@@ -698,52 +711,52 @@ export default function Home() {
           // Apply reordering/updates to the column
           // We need to update the card in the column if we are adding history, 
           // OR if we reordered it.
-          
+
           if (hasChangedColumn) {
-             const originalColumnTitle = prev.columns.find(c => c.id === dragStartColumnId)?.title || "otra lista";
-             const newColumnTitle = activeColumn.title;
-             
-             const logMessage = `Movido de **${originalColumnTitle}** a **${newColumnTitle}**`;
-             const log = createHistoryLog(logMessage);
-             const globalLog = createHistoryLog(`Movió de **${originalColumnTitle}**: "${activeColumn.cards[activeCardIndex].title}" a **${newColumnTitle}**`);
-             
-             newActivityLog = [globalLog, ...newActivityLog];
-             
-             // Update card history
-             const updatedCard = {
-               ...activeColumn.cards[activeCardIndex],
-               history: [log, ...activeColumn.cards[activeCardIndex].history]
-             };
-             
-             // If we also reordered (arrayMove), we need to place this updated card in the correct spot
-             // But arrayMove works on indices. 
-             // If activeId !== overId, we reordered.
-             // If activeId === overId, we didn't reorder (just dropped in place in new column).
-             
-             if (activeColumnIndex === overColumnIndex && activeId !== overId) {
-                // We reordered AND changed column (effectively, since onDragOver moved it)
-                // newCards already has the reordered list.
-                // We need to find the card in newCards and update it.
-                const reorderedCardIndex = newCards.findIndex(c => c.id === activeId);
-                newCards[reorderedCardIndex] = updatedCard;
-             } else {
-                // Just changed column, no reorder within the new column (or dropped at end)
-                // newCards is just activeColumn.cards.
-                // We update the card at activeCardIndex.
-                newCards = [...newCards];
-                newCards[activeCardIndex] = updatedCard;
-             }
+            const originalColumnTitle = prev.columns.find(c => c.id === dragStartColumnId)?.title || "otra lista";
+            const newColumnTitle = activeColumn.title;
+
+            const logMessage = `Movido de **${originalColumnTitle}** a **${newColumnTitle}**`;
+            const log = createHistoryLog(logMessage);
+            const globalLog = createHistoryLog(`Movió de **${originalColumnTitle}**: "${activeColumn.cards[activeCardIndex].title}" a **${newColumnTitle}**`);
+
+            newActivityLog = [globalLog, ...newActivityLog];
+
+            // Update card history
+            const updatedCard = {
+              ...activeColumn.cards[activeCardIndex],
+              history: [log, ...activeColumn.cards[activeCardIndex].history]
+            };
+
+            // If we also reordered (arrayMove), we need to place this updated card in the correct spot
+            // But arrayMove works on indices. 
+            // If activeId !== overId, we reordered.
+            // If activeId === overId, we didn't reorder (just dropped in place in new column).
+
+            if (activeColumnIndex === overColumnIndex && activeId !== overId) {
+              // We reordered AND changed column (effectively, since onDragOver moved it)
+              // newCards already has the reordered list.
+              // We need to find the card in newCards and update it.
+              const reorderedCardIndex = newCards.findIndex(c => c.id === activeId);
+              newCards[reorderedCardIndex] = updatedCard;
+            } else {
+              // Just changed column, no reorder within the new column (or dropped at end)
+              // newCards is just activeColumn.cards.
+              // We update the card at activeCardIndex.
+              newCards = [...newCards];
+              newCards[activeCardIndex] = updatedCard;
+            }
           } else if (activeColumnIndex === overColumnIndex && activeId !== overId) {
-             // Just reordered in same column (no column change)
-             // newCards is already calculated above
+            // Just reordered in same column (no column change)
+            // newCards is already calculated above
           } else {
-             // No change (dropped in same place in same column)
-             setDragStartColumnId(null);
-             return prev;
+            // No change (dropped in same place in same column)
+            setDragStartColumnId(null);
+            return prev;
           }
 
           newColumns[activeColumnIndex] = { ...activeColumn, cards: newCards };
-          
+
           return {
             ...prev,
             activityLog: newActivityLog,
@@ -767,7 +780,7 @@ export default function Home() {
     }
 
     const lowerSearchTerm = searchTerm.toLowerCase();
-    
+
     return {
       ...board,
       columns: board.columns.map(column => ({
@@ -775,29 +788,29 @@ export default function Home() {
         cards: column.cards.filter(card => {
           // Search in card title
           const titleMatch = card.title.toLowerCase().includes(lowerSearchTerm);
-          
+
           // Search in card description
           const descriptionMatch = card.description?.toLowerCase().includes(lowerSearchTerm);
-          
+
           // Search in tags
-          const tagMatch = card.tags?.some(tag => 
+          const tagMatch = card.tags?.some(tag =>
             tag.name.toLowerCase().includes(lowerSearchTerm)
           );
-          
+
           // Search in column name
           const columnMatch = column.title.toLowerCase().includes(lowerSearchTerm);
-          
+
           // Search in priority (low, medium, high / baja, media, alta)
           const priorityMap: Record<string, string[]> = {
             'low': ['low', 'baja', 'bajo'],
             'medium': ['medium', 'media', 'medio'],
             'high': ['high', 'alta', 'alto', 'urgente', 'crítico', 'critico']
           };
-          
-          const priorityMatch = priorityMap[card.priority]?.some(term => 
+
+          const priorityMatch = priorityMap[card.priority]?.some(term =>
             term.includes(lowerSearchTerm) || lowerSearchTerm.includes(term)
           );
-          
+
           return titleMatch || descriptionMatch || tagMatch || columnMatch || priorityMatch;
         }),
       })),
@@ -820,8 +833,8 @@ export default function Home() {
     }));
 
     const totalTasks = board.columns.reduce((sum, col) => sum + col.cards.length, 0);
-    const completedColumn = board.columns.find(col => 
-      col.title.toLowerCase().includes("hecho") || 
+    const completedColumn = board.columns.find(col =>
+      col.title.toLowerCase().includes("hecho") ||
       col.title.toLowerCase().includes("completado") ||
       col.title.toLowerCase().includes("done")
     );
@@ -883,7 +896,7 @@ export default function Home() {
         <Sidebar />
 
         <div className="flex-1 flex flex-col h-full min-w-0">
-          <BoardHeader 
+          <BoardHeader
             boardName={board.name}
             boardColor={board.backgroundColor}
             onColorChange={handleColorChange}
@@ -933,7 +946,7 @@ export default function Home() {
                         onChangeColor={handleChangeColumnColor}
                       />
                     )}
-                    
+
                     <button
                       onClick={() => handleAddNewColumn("Nueva Lista", index + 1)}
                       className="w-12 flex-shrink-0 h-12 self-start mt-2 border-2 border-dashed border-slate-300 dark:border-gray-600 rounded-2xl flex items-center justify-center text-slate-400 dark:text-gray-500 hover:border-cyan-400 dark:hover:border-cyan-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all"
@@ -998,21 +1011,21 @@ export default function Home() {
             {activeColumn && (
               <Column
                 column={activeColumn}
-                onAddCard={() => {}}
-                onEditCard={() => {}}
-                onDeleteCard={() => {}}
-                onCardClick={() => {}}
-                onEditColumn={() => {}}
-                onDeleteColumn={() => {}}
-                onChangeColor={() => {}}
+                onAddCard={() => { }}
+                onEditCard={() => { }}
+                onDeleteCard={() => { }}
+                onCardClick={() => { }}
+                onEditColumn={() => { }}
+                onDeleteColumn={() => { }}
+                onChangeColor={() => { }}
               />
             )}
             {activeCard && (
               <Card
                 card={activeCard}
-                onEditCard={() => {}}
-                onDeleteCard={() => {}}
-                onCardClick={() => {}}
+                onEditCard={() => { }}
+                onDeleteCard={() => { }}
+                onCardClick={() => { }}
               />
             )}
           </DragOverlay>,
@@ -1024,7 +1037,7 @@ export default function Home() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleCancelTask}>
             <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">Crear Nueva Tarea</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Título de la tarea</label>
@@ -1068,15 +1081,14 @@ export default function Home() {
                       <button
                         key={priority}
                         onClick={() => setNewTaskPriority(priority)}
-                        className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                          newTaskPriority === priority
-                            ? priority === "low"
-                              ? "bg-blue-500 text-white"
-                              : priority === "medium"
+                        className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${newTaskPriority === priority
+                          ? priority === "low"
+                            ? "bg-blue-500 text-white"
+                            : priority === "medium"
                               ? "bg-orange-500 text-white"
                               : "bg-red-500 text-white"
-                            : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
-                        }`}
+                          : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
+                          }`}
                       >
                         {priority === "low" ? "Baja" : priority === "medium" ? "Media" : "Alta"}
                       </button>
@@ -1107,7 +1119,7 @@ export default function Home() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleCancelCardEdit}>
             <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-4">Editar Tarea</h2>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Título de la tarea</label>
@@ -1147,15 +1159,14 @@ export default function Home() {
                       <button
                         key={priority}
                         onClick={() => setEditCardPriority(priority)}
-                        className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                          editCardPriority === priority
-                            ? priority === "low"
-                              ? "bg-blue-500 text-white"
-                              : priority === "medium"
+                        className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${editCardPriority === priority
+                          ? priority === "low"
+                            ? "bg-blue-500 text-white"
+                            : priority === "medium"
                               ? "bg-orange-500 text-white"
                               : "bg-red-500 text-white"
-                            : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
-                        }`}
+                          : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
+                          }`}
                       >
                         {priority === "low" ? "Baja" : priority === "medium" ? "Media" : "Alta"}
                       </button>

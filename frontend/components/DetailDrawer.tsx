@@ -108,17 +108,17 @@ const TAG_COLORS = [
 ];
 
 export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: DetailDrawerProps) {
-  const [title, setTitle] = useState(card.title);
-  const [description, setDescription] = useState(card.description);
+  const [title, setTitle] = useState(card.title || "");
+  const [description, setDescription] = useState(card.description || "");
   const [priority, setPriority] = useState(card.priority);
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const [newTagName, setNewTagName] = useState("");
   const [selectedTagColor, setSelectedTagColor] = useState(TAG_COLORS[0]);
 
   useEffect(() => {
-    setTitle(card.title);
-    setDescription(card.description);
+    setTitle(card.title || "");
+    setDescription(card.description || "");
     setPriority(card.priority);
   }, [card]);
 
@@ -155,12 +155,12 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
         name: newTagName.trim(),
         color: selectedTagColor,
       };
-      
+
       onUpdate({
         ...card,
         tags: [...card.tags, newTag],
       });
-      
+
       setNewTagName("");
       setSelectedTagColor(TAG_COLORS[0]);
     }
@@ -180,7 +180,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
       timestamp: Date.now(),
       text,
     };
-    
+
     onUpdate({
       ...card,
       comments: [...card.comments, newComment],
@@ -199,7 +199,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
         className="fixed inset-0 bg-black/50 z-40 transition-opacity"
         onClick={onClose}
       />
-      
+
       <div className="fixed right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 xl:w-1/3 bg-white dark:bg-gray-800 shadow-2xl z-50 overflow-y-auto transition-transform custom-scrollbar">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white">
@@ -248,15 +248,14 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
                     setPriority(p);
                     setIsEditing(true);
                   }}
-                  className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${
-                    priority === p
-                      ? p === "low"
-                        ? "bg-blue-500 text-white"
-                        : p === "medium"
+                  className={`flex-1 px-4 py-2 rounded-xl font-semibold text-sm transition-all ${priority === p
+                    ? p === "low"
+                      ? "bg-blue-500 text-white"
+                      : p === "medium"
                         ? "bg-orange-500 text-white"
                         : "bg-red-500 text-white"
-                      : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
-                  }`}
+                    : "bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-gray-600"
+                    }`}
                 >
                   {priorityLabels[p]}
                 </button>
@@ -270,7 +269,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
             </label>
             {isEditing ? (
               <textarea
-                value={description}
+                value={description || ""}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Añade una descripción detallada..."
                 rows={6}
@@ -314,7 +313,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
                 Etiquetas
               </h3>
             </div>
-            
+
             <div className="flex flex-wrap gap-2 mb-4">
               {card.tags.map((tag) => (
                 <div
@@ -345,21 +344,20 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
                   }
                 }}
               />
-              
+
               <div className="flex gap-2">
                 {TAG_COLORS.map((color) => (
                   <button
                     key={color}
                     onClick={() => setSelectedTagColor(color)}
-                    className={`w-8 h-8 rounded-lg ${color} ${
-                      selectedTagColor === color
-                        ? "ring-2 ring-offset-2 ring-cyan-500 dark:ring-offset-gray-800"
-                        : ""
-                    } transition-all`}
+                    className={`w-8 h-8 rounded-lg ${color} ${selectedTagColor === color
+                      ? "ring-2 ring-offset-2 ring-cyan-500 dark:ring-offset-gray-800"
+                      : ""
+                      } transition-all`}
                   />
                 ))}
               </div>
-              
+
               <button
                 onClick={handleAddTag}
                 disabled={!newTagName.trim()}
@@ -377,7 +375,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
                 Comentarios
               </h3>
             </div>
-            
+
             <div className="space-y-4">
               <CommentInput onCommentSubmit={handleCommentSubmit} />
               <CommentFeed comments={card.comments} />

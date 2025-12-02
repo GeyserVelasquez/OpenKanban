@@ -30,10 +30,10 @@ class BoardController extends Controller
 
         $board->load([
             'folder.group',
-            'columns' => function($query) {
+            'columns' => function ($query) {
                 $query->orderBy('position');
             },
-            'columns.tasks' => function($query) {
+            'columns.tasks' => function ($query) {
                 $query->orderBy('position');
             },
             'columns.tasks.assignedUsers:id,name,email',
@@ -52,7 +52,7 @@ class BoardController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'folder_id' => 'nullable|exists:folders,id',
             'group_id' => 'required_without:folder_id|exists:groups,id',
         ]);
@@ -184,7 +184,7 @@ class BoardController extends Controller
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
         ]);
 
         $board->update($request->only(['name', 'color']));
