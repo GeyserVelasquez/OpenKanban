@@ -123,9 +123,8 @@ export default function Card({ card, onEditCard, onDeleteCard, onCardClick }: Ca
     >
       <div className="flex items-start justify-between mb-2">
         <span
-          className={`text-xs font-bold px-3 py-1 rounded-full ${
-            priorityColors[card.priority]
-          }`}
+          className={`text-xs font-bold px-3 py-1 rounded-full ${priorityColors[card.priority]
+            }`}
         >
           {priorityLabels[card.priority]}
         </span>

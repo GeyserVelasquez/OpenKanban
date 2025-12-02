@@ -33,6 +33,7 @@ export interface ColumnType {
   title: string;
   color: string;
   cards: CardType[];
+  position?: number;
 }
 
 export interface MemberType {
@@ -70,3 +71,5 @@ export interface WorkspaceData {
   activeGroupId: string | null;
   activeBoardId: string | null;
 }
+
+export type ThemeType = "light" | "dark" | "playful";

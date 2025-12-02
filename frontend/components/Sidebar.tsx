@@ -153,9 +153,8 @@ const GroupItem = ({
     <div className="select-none">
       <div className="group flex items-center gap-2 py-2 pr-3 pl-3 cursor-pointer transition-colors duration-200 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white">
         <span
-          className={`text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-transform duration-200 ${
-            isExpanded ? "rotate-0" : "-rotate-90"
-          }`}
+          className={`text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-transform duration-200 ${isExpanded ? "rotate-0" : "-rotate-90"
+            }`}
           onClick={onToggle}
         >
           <IconChevronDown className="w-3 h-3" />
@@ -281,11 +280,10 @@ const BoardItem = ({
 
   return (
     <div
-      className={`group flex items-center gap-2 py-2 pr-3 pl-9 cursor-pointer transition-colors duration-200 ${
-        isActive
-          ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border-r-2 border-cyan-500"
-          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white"
-      }`}
+      className={`group flex items-center gap-2 py-2 pr-3 pl-9 cursor-pointer transition-colors duration-200 ${isActive
+        ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border-r-2 border-cyan-500"
+        : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white"
+        }`}
       onClick={onClick}
     >
       <div className="w-3 h-3" />
@@ -391,6 +389,7 @@ export default function Sidebar() {
     deleteBoard,
     renameBoard,
     setActiveBoard,
+    isLoading,
   } = useWorkspace();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(workspace.groups.map((g) => g.id))
@@ -402,6 +401,28 @@ export default function Sidebar() {
   } | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{
+    id: number;
+    name: string;
+    email: string;
+    created_at: string;
+    groups_count?: number;
+    tasks_count?: number;
+  } | null>(null);
+
+  // Fetch user profile on mount
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        await api.get("http://localhost:8000/sanctum/csrf-cookie");
+        const response = await api.get("http://localhost:8000/api/users/profile");
+        setCurrentUser(response.data);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
@@ -473,7 +494,11 @@ export default function Sidebar() {
             </button>
           </div>
 
-          {workspace.groups.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            </div>
+          ) : workspace.groups.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
                 No hay grupos todavía
@@ -530,16 +555,22 @@ export default function Sidebar() {
               onClick={() => setShowProfileModal(true)}
               className="flex items-center gap-3 flex-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors text-slate-600 dark:text-slate-300"
             >
-              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden">
-                <img
-                  src="/images/profile.jpg"
-                  alt="Manuel Casique"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden flex items-center justify-center">
+                {currentUser ? (
+                  <span className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                    {currentUser.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+                  </span>
+                ) : (
+                  <img
+                    src="/images/profile.jpg"
+                    alt="User"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
               <div className="flex flex-col items-start">
                 <span className="text-sm font-semibold text-slate-700 dark:text-white">
-                  Manuel Casique
+                  {currentUser?.name || "Cargando..."}
                 </span>
               </div>
             </button>
@@ -622,19 +653,17 @@ export default function Sidebar() {
 
             {/* Profile Picture and Basic Info */}
             <div className="flex items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-gray-700">
-              <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden ring-4 ring-cyan-500/20">
-                <img
-                  src="/images/profile.jpg"
-                  alt="Manuel Casique"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 overflow-hidden ring-4 ring-cyan-500/20 flex items-center justify-center">
+                <span className="text-4xl font-bold text-white">
+                  {currentUser?.name.split(" ").map(n => n[0]).join("").toUpperCase() || "U"}
+                </span>
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
-                  Manuel Casique
+                  {currentUser?.name || "Cargando..."}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-2">
-                  Administrador del Workspace
+                  Miembro del Workspace
                 </p>
               </div>
             </div>
@@ -651,15 +680,15 @@ export default function Sidebar() {
                       Correo Electrónico
                     </p>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                      manuel.casique@email.com
+                      {currentUser?.email || "No disponible"}
                     </p>
                   </div>
                   <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      Rol
+                      ID de Usuario
                     </p>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                      Administrador
+                      #{currentUser?.id || "---"}
                     </p>
                   </div>
                   <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
@@ -667,15 +696,15 @@ export default function Sidebar() {
                       Fecha de Registro
                     </p>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                      15 de Noviembre, 2024
+                      {currentUser?.created_at ? new Date(currentUser.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) : "No disponible"}
                     </p>
                   </div>
                   <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      Último Acceso
+                      Tareas Asignadas
                     </p>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                      Hoy, 6:49 PM
+                      {currentUser?.tasks_count ?? "---"}
                     </p>
                   </div>
                 </div>

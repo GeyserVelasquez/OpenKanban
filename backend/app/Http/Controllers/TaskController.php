@@ -43,10 +43,11 @@ class TaskController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'column_id' => 'required|exists:columns,id',
             'state_id' => 'required|exists:states,id',
             'position' => 'required|numeric',
+            'priority' => 'nullable|in:low,medium,high',
         ]);
 
         // Verificar acceso a la columna
@@ -63,6 +64,7 @@ class TaskController extends Controller
             'state_id' => $request->state_id,
             'creator_id' => auth()->id(),
             'position' => $request->position,
+            'priority' => $request->priority ?? 'medium',
         ]);
 
         $task->load(['state:id,name,color', 'assignedUsers:id,name,email']);
@@ -83,11 +85,37 @@ class TaskController extends Controller
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'state_id' => 'sometimes|exists:states,id',
+            'priority' => 'nullable|in:low,medium,high',
+            'tags' => 'nullable|array',
+            'tags.*.name' => 'required|string',
+            'tags.*.color' => 'required|string',
         ]);
 
-        $task->update($request->only(['name', 'description', 'color', 'state_id']));
+        $task->update($request->only(['name', 'description', 'color', 'state_id', 'priority']));
+
+        if ($request->has('tags')) {
+            $boardId = $task->column->board_id;
+            $tagIds = [];
+
+            foreach ($request->tags as $tagData) {
+                $tag = \App\Models\Tag::firstOrCreate(
+                    [
+                        'name' => $tagData['name'],
+                        'board_id' => $boardId,
+                    ],
+                    [
+                        'color' => $tagData['color']
+                    ]
+                );
+                $tagIds[] = $tag->id;
+            }
+
+            $task->tags()->sync($tagIds);
+        }
+
+        $task->load('tags');
 
         return response()->json($task, 200);
     }
@@ -182,7 +210,7 @@ class TaskController extends Controller
             $updated = 0;
             foreach ($request->tasks as $taskData) {
                 $task = Task::find($taskData['id']);
-                
+
                 if (!$this->userHasAccess($task)) {
                     continue; // Skip tasks without access
                 }

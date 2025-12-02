@@ -17,7 +17,7 @@ class ColumnController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'board_id' => 'required|exists:boards,id',
             'position' => 'required|numeric',
         ]);
@@ -50,10 +50,11 @@ class ColumnController extends Controller
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
+            'position' => 'sometimes|numeric',
         ]);
 
-        $column->update($request->only(['name', 'color']));
+        $column->update($request->only(['name', 'color', 'position']));
 
         return response()->json($column, 200);
     }
@@ -113,7 +114,7 @@ class ColumnController extends Controller
             $updated = 0;
             foreach ($request->columns as $columnData) {
                 $column = Column::find($columnData['id']);
-                
+
                 if (!$this->userHasAccess($column)) {
                     continue;
                 }
