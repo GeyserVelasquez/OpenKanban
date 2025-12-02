@@ -53,7 +53,7 @@ interface WorkspaceContextType {
   deleteGroup: (groupId: string) => void;
   renameGroup: (groupId: string, newTitle: string) => void;
   createBoard: (groupId: string, title: string) => Promise<string>;
-  deleteBoard: (boardId: string) => void;
+  deleteBoard: (boardId: string) => Promise<void>;
   renameBoard: (boardId: string, newTitle: string) => void;
   setActiveBoard: (boardId: string) => void;
   getActiveBoard: () => BoardType | null;
@@ -86,64 +86,69 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
 
   const [mounted, setMounted] = useState(false);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    setMounted(true);
-    const savedWorkspace = localStorage.getItem("OPENKANBAN_WORKSPACE");
+    let mounted = true;
 
-    if (savedWorkspace) {
+    const loadWorkspaceFromApi = async () => {
       try {
-        const parsed = JSON.parse(savedWorkspace);
-        setWorkspace(parsed);
-      } catch (error) {
-        console.error("Error parsing workspace data:", error);
-      }
-    } else {
-      // Check for old data format and migrate
-      const oldBoard = localStorage.getItem("OPENKANBAN_BOARD");
-      if (oldBoard) {
         try {
-          const parsedOldBoard = JSON.parse(oldBoard);
-          // Create default group and migrate old board
-          const defaultGroup: GroupType = {
-            id: `group-${Date.now()}`,
-            title: "Mi Workspace",
-            type: "group",
-            boards: [
-              {
-                ...parsedOldBoard,
-                groupId: `group-${Date.now()}`,
-                createdAt: Date.now(),
-              },
-            ],
-            createdAt: Date.now(),
-          };
+          await api.get("http://localhost:8000/sanctum/csrf-cookie");
+        } catch { }
 
-          const newWorkspace: WorkspaceData = {
-            groups: [defaultGroup],
-            activeGroupId: defaultGroup.id,
-            activeBoardId: parsedOldBoard.id,
-          };
+        const res = await api.get("http://localhost:8000/api/groups");
+        if (!mounted) return;
 
-          setWorkspace(newWorkspace);
-          localStorage.setItem(
-            "OPENKANBAN_WORKSPACE",
-            JSON.stringify(newWorkspace)
+        const apiGroups = Array.isArray(res.data) ? res.data : [];
+
+        const mappedGroups: GroupType[] = apiGroups.map((g: any) => {
+          const folders = Array.isArray(g.folders) ? g.folders : [];
+          const boardsFromFolders = folders.flatMap((f: any) =>
+            Array.isArray(f.boards) ? f.boards : []
           );
-        } catch (error) {
-          console.error("Error migrating old board data:", error);
-        }
+
+          const boards: BoardType[] = boardsFromFolders.map((b: any) => ({
+            id: String(b.id),
+            name: b.name ?? b.title ?? "Untitled",
+            backgroundColor: b.color ?? "bg-gray-100 dark:bg-gray-800",
+            columns: [],
+            activityLog: [],
+            groupId: String(g.id),
+            createdAt: Date.now(),
+          }));
+
+          return {
+            id: String(g.id),
+            title: g.name ?? g.title ?? "Grupo",
+            type: "group",
+            boards,
+            createdAt: Date.now(),
+          } as GroupType;
+        });
+
+        setWorkspace({
+          groups: mappedGroups,
+          activeGroupId: mappedGroups[0]?.id ?? null,
+          activeBoardId: mappedGroups[0]?.boards?.[0]?.id ?? null,
+        });
+
+        setMounted(true);
+      } catch (err) {
+        console.error("Error cargando workspace desde API:", err);
+        setMounted(true);
       }
-    }
+    };
+
+    loadWorkspaceFromApi();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Save to localStorage whenever workspace changes
-  useEffect(() => {
-    if (!mounted) return;
-    localStorage.setItem("OPENKANBAN_WORKSPACE", JSON.stringify(workspace));
-  }, [workspace, mounted]);
-
-  // Reemplazar la función createGroup existente en WorkspaceProvider
+  // useEffect(() => {
+  //   if (!mounted) return;
+  //   localStorage.setItem("OPENKANBAN_WORKSPACE", JSON.stringify(workspace));
+  // }, [workspace, mounted]);
 
   const createGroup = async (
     title: string,
@@ -179,8 +184,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }
   };
 
-  // Reemplazar la función deleteGroup existente en WorkspaceProvider
-
   const deleteGroup = async (groupId: string): Promise<void> => {
     try {
       await api.get("http://localhost:8000/sanctum/csrf-cookie");
@@ -208,8 +211,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }
   };
 
-  // Reemplazar la función renameGroup existente en WorkspaceProvider
-
   const renameGroup = async (
     groupId: string,
     newTitle: string
@@ -236,8 +237,6 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }
   };
 
-  // Reemplazar la función createBoard existente en WorkspaceProvider
-
   const createBoard = async (
     groupId: string,
     title: string
@@ -261,22 +260,19 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       );
       const createdApiBoard = response.data;
 
-      // 3. Generar los datos complejos que se manejan en el frontend
       const defaultColumns = createDefaultColumns();
       const activityLog = [createHistoryLog("Tablero creado")];
 
-      // 4. Crear el objeto BoardType combinando API data con defaults locales
       const newBoard: BoardType = {
-        id: createdApiBoard.id.toString(), // ID numérico de la API a string
+        id: createdApiBoard.id.toString(),
         name: createdApiBoard.name,
         backgroundColor: "bg-gray-100 dark:bg-gray-800",
-        columns: defaultColumns, // Datos generados localmente
-        activityLog: activityLog, // Datos generados localmente
-        groupId: createdApiBoard.groupId?.toString(), // ID del grupo devuelto
+        columns: defaultColumns,
+        activityLog: activityLog,
+        groupId: createdApiBoard.groupId?.toString(),
         createdAt: Date.now(),
       };
 
-      // 5. Actualizar el estado local
       setWorkspace((prev) => ({
         ...prev,
         groups: prev.groups.map((g) =>
@@ -285,55 +281,35 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
         activeBoardId: prev.activeBoardId || newBoard.id,
       }));
 
-      // 6. Devolver el ID del tablero creado
       return newBoard.id;
     } catch (error) {
       console.error("Fallo al crear el tablero:", error);
       alert("Error al crear el tablero. Verifica la conexión.");
-      return ""; // Devolver vacío si hay un fallo
+      return "";
     }
   };
 
-  // const renameGroup = (groupId: string, newTitle: string) => {
-  //   setWorkspace((prev) => ({
-  //     ...prev,
-  //     groups: prev.groups.map((g) =>
-  //       g.id === groupId ? { ...g, title: newTitle } : g
-  //     ),
-  //   }));
-  // };
+  const deleteBoard = async (boardId: string): Promise<void> => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
 
-  // const createBoard = (groupId: string, title: string): string => {
-  //   const newBoard: BoardType = {
-  //     id: `board-${Date.now()}`,
-  //     name: title,
-  //     backgroundColor: "bg-gray-100 dark:bg-gray-800",
-  //     columns: createDefaultColumns(),
-  //     activityLog: [createHistoryLog("Tablero creado")],
-  //     groupId,
-  //     createdAt: Date.now(),
-  //   };
+      const apiUrl = `http://localhost:8000/api/boards/${boardId}`;
 
-  //   setWorkspace((prev) => ({
-  //     ...prev,
-  //     groups: prev.groups.map((g) =>
-  //       g.id === groupId ? { ...g, boards: [...g.boards, newBoard] } : g
-  //     ),
-  //     activeBoardId: prev.activeBoardId || newBoard.id,
-  //   }));
+      await api.delete(apiUrl);
 
-  //   return newBoard.id;
-  // };
-
-  const deleteBoard = (boardId: string) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      groups: prev.groups.map((g) => ({
-        ...g,
-        boards: g.boards.filter((b) => b.id !== boardId),
-      })),
-      activeBoardId: prev.activeBoardId === boardId ? null : prev.activeBoardId,
-    }));
+      setWorkspace((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g: GroupType) => ({
+          ...g,
+          boards: g.boards.filter((b: BoardType) => b.id !== boardId),
+        })),
+        activeBoardId:
+          prev.activeBoardId === boardId ? null : prev.activeBoardId,
+      }));
+    } catch (error) {
+      console.error(`Fallo al eliminar el tablero ${boardId}:`, error);
+      alert("Error al eliminar el tablero. Por favor, verifica la conexión.");
+    }
   };
 
   const renameBoard = (boardId: string, newTitle: string) => {
@@ -348,12 +324,49 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     }));
   };
 
-  const setActiveBoard = (boardId: string) => {
-    setWorkspace((prev) => ({
-      ...prev,
-      activeBoardId: boardId,
-    }));
+  const setActiveBoard = async (boardId: string) => {
+  try {
+    // ... (llamada a API igual que antes)
+    const response = await api.get<BoardType>(`http://localhost:8000/api/boards/${boardId}`);
+    const fullBoardData = response.data;
+
+    // 2. Normalización de datos:
+    const safeBoardData = {
+      ...fullBoardData,
+      columns: Array.isArray(fullBoardData.columns)
+        ? fullBoardData.columns
+            .map((col: any) => ({
+              ...col,
+              title: col.title || col.name || "", // <--- INTENTA RECUPERAR EL NOMBRE REAL
+              cards: Array.isArray(col.cards) ? col.cards : [],
+            }))
+            .filter((col: any) => col.title.trim() !== "") // <--- SI NO TIENE TÍTULO, NO SE MUESTRA
+        : [],
+    };
+      // 3. Actualizar el estado del workspace con los datos frescos y seguros
+      setWorkspace((prev) => ({
+        ...prev,
+        groups: prev.groups.map((g) => ({
+          ...g,
+          boards: g.boards.map((b) =>
+            b.id === boardId ? { ...b, ...safeBoardData } : b
+          ),
+        })),
+        activeBoardId: boardId,
+      }));
+    } catch (error) {
+      console.error(`Error cargando el tablero ${boardId}:`, error);
+    }
   };
+
+
+
+  // const setActiveBoard = (boardId: string) => {
+  //   setWorkspace((prev) => ({
+  //     ...prev,
+  //     activeBoardId: boardId,
+  //   }));
+  // };
 
   const getActiveBoard = (): BoardType | null => {
     if (!workspace.activeBoardId) return null;
