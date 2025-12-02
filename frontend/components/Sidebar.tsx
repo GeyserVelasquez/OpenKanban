@@ -5,6 +5,7 @@ import { useWorkspace } from "@/context/WorkspaceContext";
 import CreateGroupModal from "./CreateGroupModal";
 import CreateBoardModal from "./CreateBoardModal";
 import Logo from "./Logo";
+import api from "@/lib/axios";
 
 // --- Icons ---
 const IconGroup = ({ className }: { className?: string }) => (
@@ -220,9 +221,26 @@ export default function Sidebar() {
     setActiveBoard(boardId);
   };
 
-  const handleLogout = () => {
+  const handleLogout = (e: React.FormEvent) => {
+
+    e.preventDefault();
+
+    api.get("http://localhost:8000/sanctum/csrf-cookie");
+
+    api
+      .post("http://localhost:8000/logout")
+      .then((response) => {
+        window.location.href = "/login";
+        console.log("Logout successful:", response.data);
+        // Handle successful login (e.g., redirect, store token, etc.)
+      })
+      .catch((error) => {
+        console.error("Login error:", error.response?.data || error.message);
+        // Handle login error (e.g., show error message)
+      });
+
     // Redirect to login page
-    window.location.href = "/login";
+    // window.location.href = "/login";
   };
 
   return (
