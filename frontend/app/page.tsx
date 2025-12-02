@@ -31,9 +31,10 @@ import Card from "@/components/Card";
 import DetailDrawer from "@/components/DetailDrawer";
 import GlobalHistoryModal from "@/components/GlobalHistoryModal";
 import DashboardModal from "@/components/DashboardModal";
-import { BoardType, ColumnType, CardType, HistoryLogType } from "@/types/kanban";
+import { BoardType, ColumnType, CardType, HistoryLogType, MemberType } from "@/types/kanban";
 
 const CURRENT_USER = "Manuel Casique";
+const CURRENT_USERNAME = "manuelcasique"; // Username del usuario actual
 
 const createHistoryLog = (message: string): HistoryLogType => ({
   timestamp: Date.now(),
@@ -173,6 +174,28 @@ export default function Home() {
     if (!mounted || !board) return;
     updateBoard(board.id, board);
   }, [board, mounted]);
+
+  // Initialize board members if not present
+  useEffect(() => {
+    if (!board || !mounted) return;
+    
+    // If board doesn't have members array, initialize it with the current user as owner
+    if (!board.members || board.members.length === 0) {
+      const initialMember: MemberType = {
+        id: `member-${Date.now()}`,
+        username: CURRENT_USERNAME,
+        name: CURRENT_USER,
+        role: "owner",
+        joinedAt: Date.now(),
+      };
+      
+      setBoard((prev) => prev ? ({
+        ...prev,
+        members: [initialMember],
+        createdBy: CURRENT_USERNAME,
+      }) : null);
+    }
+  }, [board?.id, mounted]);
 
   const columnIds = useMemo(() => board?.columns.map((col) => col.id) || [], [board?.columns]);
 
@@ -446,6 +469,59 @@ export default function Home() {
         col.id === columnId ? { ...col, color } : col
       ),
     }) : null);
+  };
+
+  // Handle invite member
+  const handleInviteMember = async (username: string): Promise<boolean> => {
+    if (!board) return false;
+    
+    // Check if user is already a member
+    const isAlreadyMember = board.members?.some(
+      (member) => member.username.toLowerCase() === username.toLowerCase()
+    );
+    
+    if (isAlreadyMember) {
+      return false; // User already exists in the board
+    }
+    
+    // Simulate API call to check if user exists
+    // In production, this would be an actual API call to your backend
+    // For now, we'll simulate some existing users
+    const mockUsers = [
+      { username: "juanperez", name: "Juan Pérez" },
+      { username: "mariagarcia", name: "María García" },
+      { username: "carlosrodriguez", name: "Carlos Rodríguez" },
+      { username: "analopez", name: "Ana López" },
+      { username: "luismartinez", name: "Luis Martínez" },
+    ];
+    
+    const foundUser = mockUsers.find(
+      (user) => user.username.toLowerCase() === username.toLowerCase()
+    );
+    
+    if (!foundUser) {
+      return false; // User not found
+    }
+    
+    // Add user to board members
+    const newMember: MemberType = {
+      id: `member-${Date.now()}`,
+      username: foundUser.username,
+      name: foundUser.name,
+      role: "member",
+      joinedAt: Date.now(),
+    };
+    
+    setBoard((prev) => prev ? ({
+      ...prev,
+      members: [...(prev.members || []), newMember],
+      activityLog: [
+        createHistoryLog(`${foundUser.name} fue añadido al tablero`),
+        ...prev.activityLog,
+      ],
+    }) : null);
+    
+    return true; // User successfully invited
   };
 
   // --- Drag and Drop Logic ---
@@ -815,6 +891,10 @@ export default function Home() {
             onOpenHistory={() => setIsHistoryOpen(true)}
             onSearchChange={setSearchTerm}
             onOpenDashboard={() => setIsDashboardOpen(true)}
+            members={board.members || []}
+            currentUsername={CURRENT_USERNAME}
+            onInviteMember={handleInviteMember}
+            isOwner={board.createdBy === CURRENT_USERNAME}
           />
 
           <main className={`flex-1 overflow-x-auto overflow-y-hidden ${board.backgroundColor} p-6 transition-colors duration-200`}>

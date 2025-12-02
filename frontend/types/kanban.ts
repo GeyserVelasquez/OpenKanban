@@ -35,6 +35,15 @@ export interface ColumnType {
   cards: CardType[];
 }
 
+export interface MemberType {
+  id: string;
+  username: string;
+  name: string;
+  avatar?: string;
+  role: "owner" | "member";
+  joinedAt: number;
+}
+
 export interface BoardType {
   id: string;
   name: string;
@@ -43,6 +52,8 @@ export interface BoardType {
   activityLog: HistoryLogType[];
   groupId?: string; // Optional for backward compatibility
   createdAt?: number;
+  members: MemberType[];
+  createdBy?: string; // Username of the creator
 }
 
 export interface GroupType {
