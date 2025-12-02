@@ -30,10 +30,10 @@ class BoardController extends Controller
 
         $board->load([
             'folder.group',
-            'columns' => function($query) {
+            'columns' => function ($query) {
                 $query->orderBy('position');
             },
-            'columns.tasks' => function($query) {
+            'columns.tasks' => function ($query) {
                 $query->orderBy('position');
             },
             'columns.tasks.assignedUsers:id,name,email',
@@ -52,11 +52,20 @@ class BoardController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'color' => 'nullable|string|max:20',
-            'folder_id' => 'required|exists:folders,id',
+            'folder_id' => 'nullable|exists:folders,id',
+            'group_id' => 'required_without:folder_id|exists:groups,id',
         ]);
 
-        // Verificar acceso al folder
-        $folder = Folder::findOrFail($request->folder_id);
+        // Si no se proporciona folder_id, usar el folder "root" del grupo
+        if (!$request->folder_id) {
+            $folder = Folder::where('group_id', $request->group_id)
+                ->where('name', 'root')
+                ->firstOrFail();
+        } else {
+            $folder = Folder::findOrFail($request->folder_id);
+        }
+
+        // Verificar acceso al grupo
         $hasAccess = DB::table('group_user')
             ->where('group_id', $folder->group_id)
             ->where('user_id', auth()->id())
@@ -72,7 +81,7 @@ class BoardController extends Controller
             $board = Board::create([
                 'name' => $request->name,
                 'color' => $request->color ?? '#3B82F6',
-                'folder_id' => $request->folder_id,
+                'folder_id' => $folder->id,
             ]);
 
             // Crear 3 columnas por defecto
