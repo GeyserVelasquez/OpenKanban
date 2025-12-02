@@ -118,7 +118,7 @@ const EmptyState = () => (
 );
 
 export default function Home() {
-  const { getActiveBoard, updateBoard, updateColumn, createColumn, deleteColumn, createTask, updateTask, workspace } = useWorkspace();
+  const { getActiveBoard, updateBoard, updateColumn, updateColumnPosition, createColumn, deleteColumn, createTask, updateTask, moveTask, workspace } = useWorkspace();
   const [board, setBoard] = useState<BoardType | null>(null);
   const [mounted, setMounted] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -228,19 +228,15 @@ export default function Home() {
     }
   };
 
-  const handleSaveTask = () => {
+  const handleSaveTask = async () => {
     if (!board) return;
     if (newTaskTitle.trim() && newTaskColumn) {
-      const newCard: CardType = {
-        id: `card-${Date.now()}`,
-        title: newTaskTitle.trim(),
-        description: "",
-        columnId: newTaskColumn,
-        priority: newTaskPriority,
-        history: [createHistoryLog("Tarjeta creada")],
-        tags: [],
-        comments: [],
-      };
+      // Call backend to create task
+      const newCard = await createTask(newTaskColumn, newTaskTitle.trim(), "", newTaskPriority);
+
+      if (!newCard) {
+        return; // Error already shown by createTask
+      }
 
       const columnTitle = board.columns.find(c => c.id === newTaskColumn)?.title || "lista";
 
@@ -271,8 +267,8 @@ export default function Home() {
     const card = board.columns.flatMap(col => col.cards).find(c => c.id === cardId);
     if (card) {
       setEditingCard(card);
-      setEditCardTitle(title);
-      setEditCardDescription(description);
+      setEditCardTitle(title || "");
+      setEditCardDescription(description || "");
       setEditCardPriority(priority);
     }
   };
@@ -283,13 +279,13 @@ export default function Home() {
     const changes: string[] = [];
 
     if (editCardTitle.trim() !== editingCard.title) changes.push("título");
-    if (editCardDescription.trim() !== editingCard.description) changes.push("descripción");
+    if ((editCardDescription || "").trim() !== (editingCard.description || "")) changes.push("descripción");
     if (editCardPriority !== editingCard.priority) changes.push("prioridad");
 
     const updatedCard: CardType = {
       ...editingCard,
       title: editCardTitle.trim(),
-      description: editCardDescription.trim(),
+      description: (editCardDescription || "").trim(),
       priority: editCardPriority,
       history: changes.length > 0
         ? [...editingCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)]
@@ -670,6 +666,27 @@ export default function Home() {
           const overColumnIndex = board.columns.findIndex((col) => col.id === overId);
 
           const newColumns = arrayMove(board.columns, activeColumnIndex, overColumnIndex);
+
+          // Calculate new position for the moved column
+          const movedColumn = newColumns[overColumnIndex];
+          const prevCol = newColumns[overColumnIndex - 1];
+          const nextCol = newColumns[overColumnIndex + 1];
+
+          let newPosition = 1024.0;
+          if (!prevCol && nextCol) {
+            // First position
+            newPosition = (nextCol.position || 1024.0) / 2;
+          } else if (prevCol && !nextCol) {
+            // Last position
+            newPosition = (prevCol.position || 0) + 1024.0;
+          } else if (prevCol && nextCol) {
+            // Between two columns
+            newPosition = ((prevCol.position || 0) + (nextCol.position || 0)) / 2;
+          }
+
+          // Persist to backend
+          updateColumnPosition(movedColumn.id, newPosition);
+
           return { ...board, columns: newColumns };
         });
       }
@@ -722,10 +739,14 @@ export default function Home() {
 
             newActivityLog = [globalLog, ...newActivityLog];
 
+            // Persist column change to backend
+            const movedCard = activeColumn.cards[activeCardIndex];
+            moveTask(movedCard.id, activeColumn.id);
+
             // Update card history
             const updatedCard = {
-              ...activeColumn.cards[activeCardIndex],
-              history: [log, ...activeColumn.cards[activeCardIndex].history]
+              ...movedCard,
+              history: [log, ...movedCard.history]
             };
 
             // If we also reordered (arrayMove), we need to place this updated card in the correct spot

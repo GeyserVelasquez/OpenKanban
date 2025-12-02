@@ -43,10 +43,11 @@ class TaskController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'column_id' => 'required|exists:columns,id',
             'state_id' => 'required|exists:states,id',
             'position' => 'required|numeric',
+            'priority' => 'nullable|in:low,medium,high',
         ]);
 
         // Verificar acceso a la columna
@@ -63,6 +64,7 @@ class TaskController extends Controller
             'state_id' => $request->state_id,
             'creator_id' => auth()->id(),
             'position' => $request->position,
+            'priority' => $request->priority ?? 'medium',
         ]);
 
         $task->load(['state:id,name,color', 'assignedUsers:id,name,email']);
@@ -83,11 +85,12 @@ class TaskController extends Controller
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'color' => 'nullable|string|max:20',
+            'color' => 'nullable|string|max:255',
             'state_id' => 'sometimes|exists:states,id',
+            'priority' => 'nullable|in:low,medium,high',
         ]);
 
-        $task->update($request->only(['name', 'description', 'color', 'state_id']));
+        $task->update($request->only(['name', 'description', 'color', 'state_id', 'priority']));
 
         return response()->json($task, 200);
     }
@@ -182,7 +185,7 @@ class TaskController extends Controller
             $updated = 0;
             foreach ($request->tasks as $taskData) {
                 $task = Task::find($taskData['id']);
-                
+
                 if (!$this->userHasAccess($task)) {
                     continue; // Skip tasks without access
                 }

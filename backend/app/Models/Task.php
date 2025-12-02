@@ -19,6 +19,7 @@ class Task extends Model
         'state_id',
         'creator_id',
         'position',
+        'priority',
     ];
 
     protected $casts = [
@@ -42,7 +43,7 @@ class Task extends Model
 
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'task_id');
+        return $this->hasMany(TaskComment::class, 'task_id');
     }
 
     public function logs()

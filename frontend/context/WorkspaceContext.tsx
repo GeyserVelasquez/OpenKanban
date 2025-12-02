@@ -76,6 +76,7 @@ interface WorkspaceContextType {
   deleteColumn: (columnId: string) => Promise<boolean>;
   createTask: (columnId: string, title: string, description: string, priority: "low" | "medium" | "high") => Promise<CardType | null>;
   updateTask: (taskId: string, data: Partial<CardType>) => Promise<void>;
+  moveTask: (taskId: string, newColumnId: string, position?: number) => Promise<void>;
   getAllBoards: () => BoardType[];
 }
 
@@ -178,7 +179,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       const createdApiGroup = response.data;
       const newGroup: GroupType = {
         id: createdApiGroup.id.toString(),
-        title: createdApiGroup.title,
+        title: createdApiGroup.name || createdApiGroup.title,
         type: "group",
         boards: [],
         createdAt: Date.now(),
@@ -386,9 +387,14 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
             color: col.color || "bg-slate-200 dark:bg-gray-700",
             cards: Array.isArray(col.tasks)
               ? col.tasks.map((task: any) => ({
-                ...task,
                 id: task.id.toString(),
+                title: task.name || task.title || "",
+                description: task.description || "",
                 columnId: col.id.toString(),
+                priority: task.priority || "medium",
+                history: task.history || [],
+                tags: task.tags || [],
+                comments: task.comments || [],
               }))
               : [],
           }))
@@ -594,9 +600,25 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
         name: data.title,
         description: data.description,
         color: color,
+        priority: data.priority,
       });
     } catch (error) {
       console.error(`Error updating task ${taskId}:`, error);
+    }
+  };
+
+  const moveTask = async (taskId: string, newColumnId: string, position: number = 1024.0) => {
+    try {
+      await api.get("http://localhost:8000/sanctum/csrf-cookie");
+      const numericTaskId = parseInt(taskId, 10);
+      const numericColumnId = parseInt(newColumnId, 10);
+
+      await api.put(`http://localhost:8000/api/tasks/${numericTaskId}/move`, {
+        column_id: numericColumnId,
+        position: position,
+      });
+    } catch (error) {
+      console.error(`Error moving task ${taskId} to column ${newColumnId}:`, error);
     }
   };
 
@@ -621,6 +643,7 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
     deleteColumn,
     createTask,
     updateTask,
+    moveTask,
     getAllBoards,
   };
 
