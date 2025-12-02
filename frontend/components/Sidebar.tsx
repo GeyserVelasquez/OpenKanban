@@ -91,6 +91,22 @@ const IconTrash = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const IconEdit = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    <path d="m15 5 4 4" />
+  </svg>
+);
+
 const IconMoreVertical = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -116,6 +132,7 @@ interface GroupItemProps {
   onToggle: () => void;
   onDelete: () => void;
   onCreateBoard: () => void;
+  onRename: (newTitle: string) => void;
 }
 
 const GroupItem = ({
@@ -126,8 +143,11 @@ const GroupItem = ({
   onToggle,
   onDelete,
   onCreateBoard,
+  onRename,
 }: GroupItemProps) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(title);
 
   return (
     <div className="select-none">
@@ -145,12 +165,41 @@ const GroupItem = ({
           <IconGroup className="w-4 h-4" />
         </span>
 
-        <span
-          className="text-sm font-medium truncate flex-1"
-          onClick={onToggle}
-        >
-          {title}
-        </span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={() => {
+              if (editValue.trim()) {
+                onRename(editValue.trim());
+              } else {
+                setEditValue(title);
+              }
+              setIsEditing(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (editValue.trim()) {
+                  onRename(editValue.trim());
+                  setIsEditing(false);
+                }
+              } else if (e.key === "Escape") {
+                setEditValue(title);
+                setIsEditing(false);
+              }
+            }}
+            autoFocus
+            className="text-sm font-medium flex-1 bg-white dark:bg-gray-700 border border-cyan-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          />
+        ) : (
+          <span
+            className="text-sm font-medium truncate flex-1"
+            onClick={onToggle}
+          >
+            {title}
+          </span>
+        )}
 
         <span className="text-xs text-slate-400 dark:text-slate-500 mr-1">
           {boardCount}
@@ -180,6 +229,17 @@ const GroupItem = ({
               />
               <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-700 rounded-xl shadow-lg border border-slate-200 dark:border-gray-600 py-1 z-20">
                 <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    setIsEditing(true);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-600 flex items-center gap-2"
+                >
+                  <IconEdit className="w-4 h-4" />
+                  Renombrar
+                </button>
+                <button
                   onClick={() => {
                     setShowMenu(false);
                     onDelete();
@@ -204,6 +264,7 @@ interface BoardItemProps {
   isActive: boolean;
   onClick: () => void;
   onDelete: () => void;
+  onRename: (newTitle: string) => void;
 }
 
 const BoardItem = ({
@@ -212,8 +273,11 @@ const BoardItem = ({
   isActive,
   onClick,
   onDelete,
+  onRename,
 }: BoardItemProps) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(title);
 
   return (
     <div
@@ -236,7 +300,38 @@ const BoardItem = ({
         <IconBoard className="w-4 h-4" />
       </span>
 
-      <span className="text-sm font-medium truncate flex-1">{title}</span>
+      {isEditing ? (
+        <input
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => {
+            if (editValue.trim()) {
+              onRename(editValue.trim());
+            } else {
+              setEditValue(title);
+            }
+            setIsEditing(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              if (editValue.trim()) {
+                onRename(editValue.trim());
+                setIsEditing(false);
+              }
+            } else if (e.key === "Escape") {
+              setEditValue(title);
+              setIsEditing(false);
+            }
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          autoFocus
+          className="text-sm font-medium flex-1 bg-white dark:bg-gray-700 border border-cyan-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+        />
+      ) : (
+        <span className="text-sm font-medium truncate flex-1">{title}</span>
+      )}
 
       <div className="relative">
         <button
@@ -256,6 +351,17 @@ const BoardItem = ({
               onClick={() => setShowMenu(false)}
             />
             <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-700 rounded-xl shadow-lg border border-slate-200 dark:border-gray-600 py-1 z-20">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(false);
+                  setIsEditing(true);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-600 flex items-center gap-2"
+              >
+                <IconEdit className="w-4 h-4" />
+                Renombrar
+              </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -280,8 +386,10 @@ export default function Sidebar() {
     workspace,
     createGroup,
     deleteGroup,
+    renameGroup,
     createBoard,
     deleteBoard,
+    renameBoard,
     setActiveBoard,
   } = useWorkspace();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
@@ -387,6 +495,7 @@ export default function Sidebar() {
                   isExpanded={expandedGroups.has(group.id)}
                   onToggle={() => toggleGroup(group.id)}
                   onDelete={() => deleteGroup(group.id)}
+                  onRename={(newTitle) => renameGroup(group.id, newTitle)}
                   onCreateBoard={() =>
                     setCreatingBoardForGroup({
                       id: group.id,
@@ -405,6 +514,7 @@ export default function Sidebar() {
                         isActive={workspace.activeBoardId === board.id}
                         onClick={() => setActiveBoard(board.id)}
                         onDelete={() => deleteBoard(board.id)}
+                        onRename={(newTitle) => renameBoard(board.id, newTitle)}
                       />
                     ))}
                   </div>

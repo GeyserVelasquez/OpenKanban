@@ -3,7 +3,10 @@
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import FilterBar from "./FilterBar";
-import Logo from "./Logo";
+import InviteMemberModal from "./InviteMemberModal";
+import BoardMembers from "./BoardMembers";
+import MembersModal from "./MembersModal";
+import { MemberType } from "@/types/kanban";
 
 interface BoardHeaderProps {
   boardName: string;
@@ -13,6 +16,10 @@ interface BoardHeaderProps {
   onOpenHistory: () => void;
   onSearchChange: (term: string) => void;
   onOpenDashboard: () => void;
+  members: MemberType[];
+  currentUsername: string;
+  onInviteMember: (username: string) => Promise<boolean>;
+  isOwner: boolean;
 }
 
 const IconPlus = ({ className }: { className?: string }) => (
@@ -89,6 +96,24 @@ const IconChart = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const IconUserPlus = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <line x1="19" x2="19" y1="8" y2="14" />
+    <line x1="22" x2="16" y1="11" y2="11" />
+  </svg>
+);
+
 const boardColors = [
   { name: "Azul", class: "bg-blue-100 dark:bg-blue-900/40" },
   { name: "Verde", class: "bg-green-100 dark:bg-green-900/40" },
@@ -105,35 +130,39 @@ export default function BoardHeader({
   onOpenHistory,
   onSearchChange,
   onOpenDashboard,
+  members,
+  currentUsername,
+  onInviteMember,
+  isOwner,
 }: BoardHeaderProps) {
   const { theme, setTheme } = useTheme();
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
 
   return (
     <header className="h-20 px-8 flex items-center justify-between bg-white dark:bg-gray-800 border-b border-slate-100 dark:border-gray-700 flex-shrink-0 z-10 transition-colors duration-200">
       <div className="flex items-center gap-4">
-        <Logo size={40} />
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
-            {boardName}
-          </h1>
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              Active
-            </span>
-            <span className="text-slate-300 dark:text-slate-600">•</span>
-            <span>Last updated 2h ago</span>
-          </div>
-        </div>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
+          {boardName}
+        </h1>
       </div>
 
       <div className="flex items-center gap-4 flex-1 max-w-md mx-8">
         <FilterBar onSearchChange={onSearchChange} />
       </div>
 
-      <div className="flex items-center gap-6">
+      {/* Board Members */}
+      <div className="flex items-center gap-4">
+        <BoardMembers 
+          members={members} 
+          currentUsername={currentUsername}
+          onClick={() => setShowMembersModal(true)}
+        />
+      </div>
+
+      <div className="flex items-center gap-4">
 
         <div className="h-8 w-px bg-slate-200 dark:bg-gray-700"></div>
 
@@ -246,6 +275,15 @@ export default function BoardHeader({
           </div>
 
           <button
+            onClick={() => setShowInviteModal(true)}
+            className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2.5 rounded-2xl font-semibold shadow-lg shadow-purple-500/25 dark:shadow-purple-900/50 transition-all active:scale-95"
+            title="Invitar miembro"
+          >
+            <IconUserPlus className="w-5 h-5" />
+            <span>Invitar</span>
+          </button>
+
+          <button
             onClick={onCreateTask}
             className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-white px-5 py-2.5 rounded-2xl font-semibold shadow-lg shadow-cyan-500/25 dark:shadow-cyan-900/50 transition-all active:scale-95"
           >
@@ -254,6 +292,23 @@ export default function BoardHeader({
           </button>
         </div>
       </div>
+
+      {/* Invite Member Modal */}
+      <InviteMemberModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onInvite={onInviteMember}
+        isOwner={isOwner}
+      />
+
+      {/* Members Modal */}
+      <MembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        members={members}
+        currentUsername={currentUsername}
+        boardName={boardName}
+      />
     </header>
   );
 }
