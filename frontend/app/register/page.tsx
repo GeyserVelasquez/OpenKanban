@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import Logo from "@/components/Logo";
-=======
 import api from "@/lib/axios";
-
 
 const IconEye = ({ className }: { className?: string }) => (
   <svg
@@ -181,7 +179,10 @@ export default function RegisterPage() {
       })
       .catch((error) => {
         setIsLoading(false);
-        console.error("Resgister error:", error.response?.data || error.message);
+        console.error(
+          "Resgister error:",
+          error.response?.data || error.message
+        );
         return;
         // Handle login error (e.g., show error message)
       });
