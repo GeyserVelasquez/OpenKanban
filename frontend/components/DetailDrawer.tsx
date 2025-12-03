@@ -5,6 +5,7 @@ import { CardType, TagType, CommentType } from "@/types/kanban";
 import HistoryFeed from "./HistoryFeed";
 import CommentInput from "./CommentInput";
 import CommentFeed from "./CommentFeed";
+import { useAuth } from "@/context/AuthContext";
 
 interface DetailDrawerProps {
   card: CardType;
@@ -94,7 +95,7 @@ const IconMessage = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const CURRENT_USER = "Manuel Casique";
+
 
 const TAG_COLORS = [
   "bg-red-500",
@@ -108,6 +109,10 @@ const TAG_COLORS = [
 ];
 
 export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: DetailDrawerProps) {
+  const { user } = useAuth();
+  const currentUserId = user?.id || "anonymous";
+  const currentUserName = user?.name || "Usuario";
+
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description);
   const [priority, setPriority] = useState(card.priority);
@@ -176,7 +181,7 @@ export default function DetailDrawer({ card, onClose, onUpdate, onDelete }: Deta
   const handleCommentSubmit = (text: string) => {
     const newComment: CommentType = {
       id: `comment-${Date.now()}`,
-      userId: CURRENT_USER,
+      userId: currentUserId,
       timestamp: Date.now(),
       text,
     };

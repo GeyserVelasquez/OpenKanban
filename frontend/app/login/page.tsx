@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 // En frontend/components/Navbar.js
-import api from "../../lib/axios";
+import { useAuth } from "@/context/AuthContext";
 
 const IconEye = ({ className }: { className?: string }) => (
   <svg
@@ -43,6 +43,7 @@ const IconEyeOff = ({ className }: { className?: string }) => (
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -71,30 +72,19 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    api.get('http://localhost:8000/sanctum/csrf-cookie')
-
-    api.post('http://localhost:8000/login', {
-      email,
-      password,
-    }).then(response => {
-      console.log('Login successful:', response.data); // 204 No Content
-      // Handle successful login (e.g., redirect, store token, etc.)
-    }).catch(error => {
-      console.error('Login error:', error.response?.data || error.message);
-      // Handle login error (e.g., show error message)
-    });
     
     if (!validateForm()) return;
     
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      await login(email, password);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setErrors({ ...errors, email: error.message || "Error al iniciar sesión" });
+    } finally {
       setIsLoading(false);
-      // Redirect to main app
-      router.push("/");
-    }, 1500);
+    }
   };
 
   return (

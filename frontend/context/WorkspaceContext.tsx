@@ -3,11 +3,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { BoardType, GroupType, WorkspaceData, ColumnType, HistoryLogType } from "@/types/kanban";
 
-const CURRENT_USER = "Manuel Casique";
+import { useAuth } from "@/context/AuthContext";
 
-const createHistoryLog = (message: string): HistoryLogType => ({
+const createHistoryLog = (message: string, userId: string): HistoryLogType => ({
   timestamp: Date.now(),
-  userId: CURRENT_USER,
+  userId: userId,
   message,
 });
 
@@ -64,6 +64,9 @@ interface WorkspaceProviderProps {
 }
 
 export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
+  const { user } = useAuth();
+  const currentUserId = user?.id || "anonymous";
+
   const [workspace, setWorkspace] = useState<WorkspaceData>({
     groups: [],
     activeGroupId: null,
@@ -177,9 +180,18 @@ export const WorkspaceProvider = ({ children }: WorkspaceProviderProps) => {
       name: title,
       backgroundColor: "bg-gray-100 dark:bg-gray-800",
       columns: createDefaultColumns(),
-      activityLog: [createHistoryLog("Tablero creado")],
+      activityLog: [createHistoryLog("Tablero creado", currentUserId)],
       groupId,
       createdAt: Date.now(),
+      createdBy: currentUserId,
+      members: [{
+        id: currentUserId,
+        username: user?.name || "Usuario",
+        name: user?.name || "Usuario",
+        role: "owner",
+        joinedAt: Date.now(),
+        avatar: user?.avatar
+      }]
     };
 
     setWorkspace((prev) => ({

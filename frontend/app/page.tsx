@@ -24,6 +24,7 @@ import {
 import { createPortal } from "react-dom";
 
 import { useWorkspace } from "@/context/WorkspaceContext";
+import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import BoardHeader from "@/components/BoardHeader";
 import Column from "@/components/Column";
@@ -33,12 +34,9 @@ import GlobalHistoryModal from "@/components/GlobalHistoryModal";
 import DashboardModal from "@/components/DashboardModal";
 import { BoardType, ColumnType, CardType, HistoryLogType, MemberType } from "@/types/kanban";
 
-const CURRENT_USER = "Manuel Casique";
-const CURRENT_USERNAME = "manuelcasique"; // Username del usuario actual
-
-const createHistoryLog = (message: string): HistoryLogType => ({
+const createHistoryLog = (message: string, userId: string): HistoryLogType => ({
   timestamp: Date.now(),
-  userId: CURRENT_USER,
+  userId,
   message, 
 });
 
@@ -118,6 +116,11 @@ const EmptyState = () => (
 );
 
 export default function Home() {
+  const { user } = useAuth();
+  const currentUserId = user?.id || "anonymous";
+  const currentUserName = user?.name || "Usuario";
+  const currentUserEmail = user?.email || "usuario@ejemplo.com";
+
   const { getActiveBoard, updateBoard, workspace } = useWorkspace();
   const [board, setBoard] = useState<BoardType | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -182,20 +185,21 @@ export default function Home() {
     // If board doesn't have members array, initialize it with the current user as owner
     if (!board.members || board.members.length === 0) {
       const initialMember: MemberType = {
-        id: `member-${Date.now()}`,
-        username: CURRENT_USERNAME,
-        name: CURRENT_USER,
+        id: currentUserId,
+        username: currentUserEmail,
+        name: currentUserName,
         role: "owner",
         joinedAt: Date.now(),
+        avatar: user?.avatar
       };
       
       setBoard((prev) => prev ? ({
         ...prev,
         members: [initialMember],
-        createdBy: CURRENT_USERNAME,
+        createdBy: currentUserId,
       }) : null);
     }
-  }, [board?.id, mounted]);
+  }, [board?.id, mounted, user]);
 
   const columnIds = useMemo(() => board?.columns.map((col) => col.id) || [], [board?.columns]);
 
@@ -212,14 +216,14 @@ export default function Home() {
       description: "",
       columnId,
       priority: "medium",
-      history: [createHistoryLog("Tarjeta creada")],
+      history: [createHistoryLog("Tarjeta creada", currentUserId)],
       tags: [],
       comments: [],
     };
 
     setBoard((prev) => prev ? ({
       ...prev,
-      activityLog: [createHistoryLog(`Tarjeta "${title}" creada en lista`), ...prev.activityLog],
+      activityLog: [createHistoryLog(`Tarjeta "${title}" creada en lista`, currentUserId), ...prev.activityLog],
       columns: prev.columns.map((col) =>
         col.id === columnId
           ? { ...col, cards: [...col.cards, newCard] }
@@ -245,7 +249,7 @@ export default function Home() {
         description: "",
         columnId: newTaskColumn,
         priority: newTaskPriority,
-        history: [createHistoryLog("Tarjeta creada")],
+        history: [createHistoryLog("Tarjeta creada", currentUserId)],
         tags: [],
         comments: [],
       };
@@ -254,7 +258,7 @@ export default function Home() {
 
       setBoard((prev) => prev ? ({
         ...prev,
-        activityLog: [createHistoryLog(`Tarea "${newTaskTitle}" creada en ${columnTitle}`), ...prev.activityLog],
+        activityLog: [createHistoryLog(`Tarea "${newTaskTitle}" creada en ${columnTitle}`, currentUserId), ...prev.activityLog],
         columns: prev.columns.map((col) =>
           col.id === newTaskColumn
             ? { ...col, cards: [...col.cards, newCard] }
@@ -300,14 +304,14 @@ export default function Home() {
       description: editCardDescription.trim(),
       priority: editCardPriority,
       history: changes.length > 0
-        ? [...editingCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)]
+        ? [...editingCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`, currentUserId)]
         : editingCard.history,
     };
 
     setBoard((prev) => prev ? ({
       ...prev,
       activityLog: changes.length > 0 
-        ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${editingCard.title}"`), ...prev.activityLog]
+        ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${editingCard.title}"`, currentUserId), ...prev.activityLog]
         : prev.activityLog,
       columns: prev.columns.map((col) => ({
         ...col,
@@ -335,7 +339,7 @@ export default function Home() {
     const card = board.columns.flatMap(col => col.cards).find(c => c.id === cardId);
     setBoard((prev) => prev ? ({
       ...prev,
-      activityLog: card ? [createHistoryLog(`Eliminó tarjeta "${card.title}"`), ...prev.activityLog] : prev.activityLog,
+      activityLog: card ? [createHistoryLog(`Eliminó tarjeta "${card.title}"`, currentUserId), ...prev.activityLog] : prev.activityLog,
       columns: prev.columns.map((col) => ({
         ...col,
         cards: col.cards.filter((card) => card.id !== cardId),
@@ -364,14 +368,14 @@ export default function Home() {
     const cardWithHistory: CardType = changes.length > 0
       ? {
           ...updatedCard,
-          history: [...updatedCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`)],
+          history: [...updatedCard.history, createHistoryLog(`Actualizó ${changes.join(", ")}`, currentUserId)],
         }
       : updatedCard;
 
     setBoard((prev) => prev ? ({
       ...prev,
       activityLog: changes.length > 0 
-        ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${updatedCard.title}"`), ...prev.activityLog]
+        ? [createHistoryLog(`Actualizó ${changes.join(", ")} de "${updatedCard.title}"`, currentUserId), ...prev.activityLog]
         : prev.activityLog,
       columns: prev.columns.map((col) => ({
         ...col,
@@ -398,14 +402,14 @@ export default function Home() {
         newColumns.splice(insertIndex, 0, newColumn);
         return { 
           ...prev, 
-          activityLog: [createHistoryLog(`Añadió lista "${title}"`), ...prev.activityLog],
+          activityLog: [createHistoryLog(`Añadió lista "${title}"`, currentUserId), ...prev.activityLog],
           columns: newColumns 
         };
       });
     } else {
       setBoard((prev) => prev ? ({
         ...prev,
-        activityLog: [createHistoryLog(`Añadió lista "${title}"`), ...prev.activityLog],
+        activityLog: [createHistoryLog(`Añadió lista "${title}"`, currentUserId), ...prev.activityLog],
         columns: [...prev.columns, newColumn],
       }) : null);
     }
@@ -416,7 +420,7 @@ export default function Home() {
     const col = board.columns.find(c => c.id === columnId);
     setBoard((prev) => prev ? ({
       ...prev,
-      activityLog: col ? [createHistoryLog(`Eliminó lista "${col.title}"`), ...prev.activityLog] : prev.activityLog,
+      activityLog: col ? [createHistoryLog(`Eliminó lista "${col.title}"`, currentUserId), ...prev.activityLog] : prev.activityLog,
       columns: prev.columns.filter((col) => col.id !== columnId),
     }) : null);
   };
@@ -431,7 +435,7 @@ export default function Home() {
     if (editingColumnTitle.trim()) {
       setBoard((prev) => prev ? ({
         ...prev,
-        activityLog: [createHistoryLog(`Renombró lista a "${editingColumnTitle}"`), ...prev.activityLog],
+        activityLog: [createHistoryLog(`Renombró lista a "${editingColumnTitle}"`, currentUserId), ...prev.activityLog],
         columns: prev.columns.map((col) =>
           col.id === columnId
             ? { ...col, title: editingColumnTitle.trim() }
@@ -484,19 +488,12 @@ export default function Home() {
       return false; // User already exists in the board
     }
     
-    // Simulate API call to check if user exists
-    // In production, this would be an actual API call to your backend
-    // For now, we'll simulate some existing users
-    const mockUsers = [
-      { username: "juanperez", name: "Juan Pérez" },
-      { username: "mariagarcia", name: "María García" },
-      { username: "carlosrodriguez", name: "Carlos Rodríguez" },
-      { username: "analopez", name: "Ana López" },
-      { username: "luismartinez", name: "Luis Martínez" },
-    ];
+    // Check local storage for users
+    const usersJson = localStorage.getItem("OPENKANBAN_USERS");
+    const users: any[] = usersJson ? JSON.parse(usersJson) : [];
     
-    const foundUser = mockUsers.find(
-      (user) => user.username.toLowerCase() === username.toLowerCase()
+    const foundUser = users.find(
+      (u) => u.email.toLowerCase() === username.toLowerCase() || u.name.toLowerCase() === username.toLowerCase()
     );
     
     if (!foundUser) {
@@ -505,18 +502,19 @@ export default function Home() {
     
     // Add user to board members
     const newMember: MemberType = {
-      id: `member-${Date.now()}`,
-      username: foundUser.username,
+      id: foundUser.id,
+      username: foundUser.email,
       name: foundUser.name,
       role: "member",
       joinedAt: Date.now(),
+      avatar: foundUser.avatar
     };
     
     setBoard((prev) => prev ? ({
       ...prev,
       members: [...(prev.members || []), newMember],
       activityLog: [
-        createHistoryLog(`${foundUser.name} fue añadido al tablero`),
+        createHistoryLog(`${foundUser.name} fue añadido al tablero`, currentUserId),
         ...prev.activityLog,
       ],
     }) : null);
@@ -704,8 +702,8 @@ export default function Home() {
              const newColumnTitle = activeColumn.title;
              
              const logMessage = `Movido de **${originalColumnTitle}** a **${newColumnTitle}**`;
-             const log = createHistoryLog(logMessage);
-             const globalLog = createHistoryLog(`Movió de **${originalColumnTitle}**: "${activeColumn.cards[activeCardIndex].title}" a **${newColumnTitle}**`);
+             const log = createHistoryLog(logMessage, currentUserId);
+             const globalLog = createHistoryLog(`Movió de **${originalColumnTitle}**: "${activeColumn.cards[activeCardIndex].title}" a **${newColumnTitle}**`, currentUserId);
              
              newActivityLog = [globalLog, ...newActivityLog];
              
@@ -892,9 +890,9 @@ export default function Home() {
             onSearchChange={setSearchTerm}
             onOpenDashboard={() => setIsDashboardOpen(true)}
             members={board.members || []}
-            currentUsername={CURRENT_USERNAME}
+            currentUsername={currentUserEmail}
             onInviteMember={handleInviteMember}
-            isOwner={board.createdBy === CURRENT_USERNAME}
+            isOwner={board.createdBy === currentUserId}
           />
 
           <main className={`flex-1 overflow-x-auto overflow-y-hidden ${board.backgroundColor} p-6 transition-colors duration-200`}>

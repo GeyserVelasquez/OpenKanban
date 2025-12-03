@@ -23,6 +23,24 @@ const IconMessage = ({ className }: { className?: string }) => (
 );
 
 export default function CommentFeed({ comments }: CommentFeedProps) {
+  const getUserName = (userId: string) => {
+    if (typeof window === 'undefined') return userId;
+    
+    // Check for logged in user first
+    const storedUser = localStorage.getItem("OPENKANBAN_USER");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user.id === userId) return user.name;
+    }
+
+    // Check in users list
+    const usersJson = localStorage.getItem("OPENKANBAN_USERS");
+    const users: any[] = usersJson ? JSON.parse(usersJson) : [];
+    const foundUser = users.find(u => u.id === userId);
+    
+    return foundUser ? foundUser.name : userId;
+  };
+
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -71,7 +89,7 @@ export default function CommentFeed({ comments }: CommentFeedProps) {
             <div className="bg-slate-50 dark:bg-gray-700 rounded-xl p-3 group-hover:bg-slate-100 dark:group-hover:bg-gray-600 transition-colors">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-semibold text-sm text-purple-600 dark:text-purple-400">
-                  {comment.userId}
+                  {getUserName(comment.userId)}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   {formatTimestamp(comment.timestamp)}

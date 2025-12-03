@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import Logo from "@/components/Logo";
-=======
-import api from "@/lib/axios";
+
+import { useAuth } from "@/context/AuthContext";
 
 
 const IconEye = ({ className }: { className?: string }) => (
@@ -60,6 +60,7 @@ const IconCheck = ({ className }: { className?: string }) => (
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -142,25 +143,16 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    try {
-      // 1. EL ÚNICO LUGAR DONDE LLAMAS ESTO
-      await api.get('/sanctum/csrf-cookie');
+    setIsLoading(true);
 
-      // 2. Haces el login
-      await api.post('/register', {
-        name,
-        email,
-        password,
-        password_confirmation: confirmPassword,
-      });
-    } catch (error) {
+    try {
+      await register(name, email, password);
+    } catch (error: any) {
       console.error("Error al registrar el usuario:", error);
-      return;
+      setErrors({ ...errors, email: error.message || "Error al registrarse" });
     } finally {
       setIsLoading(false);
     }
-
-    router.push("/login");
   };
 
   return (

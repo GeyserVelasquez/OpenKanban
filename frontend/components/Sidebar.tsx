@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useWorkspace } from "@/context/WorkspaceContext";
+import { useAuth } from "@/context/AuthContext";
 import CreateGroupModal from "./CreateGroupModal";
 import CreateBoardModal from "./CreateBoardModal";
 import Logo from "./Logo";
@@ -391,6 +392,8 @@ export default function Sidebar() {
     renameBoard,
     setActiveBoard,
   } = useWorkspace();
+  const { user, logout } = useAuth();
+  
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(workspace.groups.map((g) => g.id))
   );
@@ -401,6 +404,10 @@ export default function Sidebar() {
   } | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const userName = user?.name || "Usuario";
+  const userEmail = user?.email || "usuario@email.com";
+  const userAvatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=random`;
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
@@ -424,8 +431,7 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    // Redirect to login page
-    window.location.href = "/login";
+    logout();
   };
 
   return (
@@ -514,14 +520,14 @@ export default function Sidebar() {
             >
               <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden">
                 <img
-                  src="/images/profile.jpg"
-                  alt="Manuel Casique"
+                  src={userAvatar}
+                  alt={userName}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex flex-col items-start">
                 <span className="text-sm font-semibold text-slate-700 dark:text-white">
-                  Manuel Casique
+                  {userName}
                 </span>
               </div>
             </button>
@@ -606,14 +612,14 @@ export default function Sidebar() {
             <div className="flex items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-gray-700">
               <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-gray-600 overflow-hidden ring-4 ring-cyan-500/20">
                 <img
-                  src="/images/profile.jpg"
-                  alt="Manuel Casique"
+                  src={userAvatar}
+                  alt={userName}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
-                  Manuel Casique
+                  {userName}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 mb-2">
                   Administrador del Workspace
@@ -633,7 +639,7 @@ export default function Sidebar() {
                       Correo Electrónico
                     </p>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                      manuel.casique@email.com
+                      {userEmail}
                     </p>
                   </div>
                   <div className="bg-slate-50 dark:bg-gray-700/50 rounded-xl p-4">
